@@ -1,16 +1,14 @@
 # ICARIS - Integrated Compliance Assessment & Risk-Management Information System 
 
-
-
-
+<img width="200" height="200" alt="E2_darkmode_inverted" src="https://github.com/user-attachments/assets/bba5914b-05ad-4f91-bba6-287b1c80569e" /> 
 
 ![Django](https://img.shields.io/badge/Django-4.2-green.svg)
 ![Python](https://img.shields.io/badge/Python-3.13-blue.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![License](https://img.shields.io/badge/License-Proprietary-red) 
 
 ## 📋 Overview
 
-ICARIS is a comprehensive Governance, Risk, and Compliance (GRC) management platform designed to help organizations track, monitor, and manage their security posture, compliance obligations, and risk landscape. Built with Django and modern web technologies, ICARIS provides an intuitive interface for security teams, compliance officers, and executives.
+ICARIS is a comprehensive Governance, Risk, and Compliance (GRC) management platform designed by Esoteric Equinox (E2) to help organizations track, monitor, and manage their security posture, compliance obligations, and risk landscape. Built with Django and modern web technologies, ICARIS provides an intuitive interface for security teams, compliance officers, and executives.
 
 ## ✨ Features
 
@@ -231,17 +229,22 @@ This is a capstone project for educational purposes. Contributions, issues, and 
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+© 2025 Tim Terrance / Esoteric Equinox (E2). All Rights Reserved.
+
+This software and its associated documentation files are the proprietary intellectual property of the copyright holder. 
+Unauthorized copying, distribution, modification, public display, or commercial use of this software is strictly prohibited 
+without prior written permission.
+
+No license is granted by implication, estoppel, or otherwise. For licensing inquiries, contact the owner directly.
 
 ## 👤 Author
 
 **Timothy Terrance**
-- GitHub: [@YourUsername](https://github.com/CodeMagicianEquinox)
+- GitHub: (https://github.com/CodeMagicianEquinox)
 
 ## 🙏 Acknowledgments
 
 - Built as a capstone project for the Full Stack Development Immersive Program at San Diego Global Knowledge University
-- Inspired by enterprise GRC platforms like ServiceNow
 - Chart.js for data visualization
 - Font Awesome for iconography
 - Django community for excellent documentation
@@ -253,5 +256,3 @@ For questions or support, please open an issue in the GitHub repository.
 ---
 
 **Note:** This system is designed for educational and demonstration purposes. For production use in a regulated environment, additional security hardening, compliance validation, and professional security assessment is recommended.
-
-Just replace:
