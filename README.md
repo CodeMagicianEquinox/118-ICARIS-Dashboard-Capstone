@@ -1,4 +1,8 @@
-# ICARIS - Integrated Compliance Assessment & Risk-Management Information System
+# ICARIS - Integrated Compliance Assessment & Risk-Management Information System 
+
+
+
+
 
 ![Django](https://img.shields.io/badge/Django-4.2-green.svg)
 ![Python](https://img.shields.io/badge/Python-3.13-blue.svg)
