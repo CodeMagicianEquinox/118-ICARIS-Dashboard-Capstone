@@ -1,14 +1,14 @@
 # ICARIS - Integrated Compliance Assessment & Risk-Management Information System 
 
-<img width="200" height="200" alt="E2_darkmode_inverted" src="https://github.com/user-attachments/assets/bba5914b-05ad-4f91-bba6-287b1c80569e" /> 
-
 ![Django](https://img.shields.io/badge/Django-4.2-green.svg)
 ![Python](https://img.shields.io/badge/Python-3.13-blue.svg)
 ![License](https://img.shields.io/badge/License-Proprietary-red) 
 
-## 📋 Overview
+<img width="100" height="100" alt="E2_darkmode_inverted" src="https://github.com/user-attachments/assets/bba5914b-05ad-4f91-bba6-287b1c80569e" /> 
 
-ICARIS is a comprehensive Governance, Risk, and Compliance (GRC) management platform designed by Esoteric Equinox (E2) to help organizations track, monitor, and manage their security posture, compliance obligations, and risk landscape. Built with Django and modern web technologies, ICARIS provides an intuitive interface for security teams, compliance officers, and executives.
+## 📋 Overview 
+
+ICARIS is a comprehensive Governance, Risk, and Compliance (GRC) management platform designed by Esoteric Equinox (E2) to help organizations track, monitor, and manage their security posture, compliance obligations, and risk landscape. Built with Django and modern web technologies, ICARIS provides an intuitive interface for security teams, compliance officers, and executives. 
 
 ## ✨ Features
 
@@ -236,6 +236,8 @@ Unauthorized copying, distribution, modification, public display, or commercial 
 without prior written permission.
 
 No license is granted by implication, estoppel, or otherwise. For licensing inquiries, contact the owner directly.
+
+<img width="100" height="100" alt="E2_darkmode_inverted" src="https://github.com/user-attachments/assets/bba5914b-05ad-4f91-bba6-287b1c80569e" /> 
 
 ## 👤 Author
 
