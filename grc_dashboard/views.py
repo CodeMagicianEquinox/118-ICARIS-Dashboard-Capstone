@@ -235,3 +235,86 @@ def risk_delete(request, pk):
         return redirect('risk_register')
     
     return render(request, 'grc_dashboard/risk_confirm_delete.html', {'risk': risk})
+
+@login_required
+def artifacts(request):
+    """Artifacts document management view"""
+    context = {
+        'artifacts': [],
+    }
+    return render(request, 'grc_dashboard/artifacts.html', context)
+
+# CRUD Views for Issues/PO&AMs
+@login_required
+def issue_create(request):
+    if request.method == 'POST':
+        form = IssueForm(request.POST)
+        if form.is_valid():
+            issue = form.save(commit=False)
+            if not issue.assigned_to:
+                issue.assigned_to = request.user
+            issue.save()
+            return redirect('issue_tracking')
+    else:
+        form = IssueForm()
+    
+    return render(request, 'grc_dashboard/issue_form.html', {'form': form, 'action': 'Create'})
+
+
+@login_required
+def issue_update(request, pk):
+    issue = get_object_or_404(Issue, pk=pk)
+    
+    if request.method == 'POST':
+        form = IssueForm(request.POST, instance=issue)
+        if form.is_valid():
+            form.save()
+            return redirect('issue_tracking')
+    else:
+        form = IssueForm(instance=issue)
+    
+    return render(request, 'grc_dashboard/issue_form.html', {'form': form, 'action': 'Update', 'issue': issue})
+
+
+@login_required
+def issue_delete(request, pk):
+    issue = get_object_or_404(Issue, pk=pk)
+    
+    if request.method == 'POST':
+        issue.delete()
+        return redirect('issue_tracking')
+    
+    return render(request, 'grc_dashboard/issue_confirm_delete.html', {'issue': issue})
+
+# CRUD Views for Artifacts
+@login_required
+def artifact_create(request):
+    from .models import Artifact
+    from .forms import ArtifactForm
+    
+    if request.method == 'POST':
+        form = ArtifactForm(request.POST, request.FILES)
+        if form.is_valid():
+            artifact = form.save(commit=False)
+            artifact.uploaded_by = request.user
+            artifact.save()
+            return redirect('artifacts')
+    else:
+        form = ArtifactForm()
+    
+    return render(request, 'grc_dashboard/artifact_form.html', {'form': form, 'action': 'Upload'})
+
+
+@login_required
+def artifact_delete(request, pk):
+    from .models import Artifact
+    
+    artifact = get_object_or_404(Artifact, pk=pk)
+    
+    if request.method == 'POST':
+        # Delete the file from storage
+        artifact.file.delete()
+        artifact.delete()
+        return redirect('artifacts')
+    
+    return render(request, 'grc_dashboard/artifact_confirm_delete.html', {'artifact': artifact})

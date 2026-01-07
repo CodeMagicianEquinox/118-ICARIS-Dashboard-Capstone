@@ -1,0 +1,209 @@
+{% extends 'grc_dashboard/base.html' %}
+
+{% block title %}Artifacts - ICARIS{% endblock %}
+
+{% block nav_artifacts %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>System Artifacts</h1>
+        <p class="subtitle">Centralized repository for system documentation and evidence.</p>
+    </div>
+    <a href="{% url 'artifact_create' %}" class="btn-primary-custom">
+        <i class="fas fa-upload"></i>Upload Artifact
+    </a>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-folder"></i>
+        </div>
+        <div class="stat-value">{{ total_artifacts }}</div>
+        <div class="stat-label">Total Artifacts</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-file-pdf"></i>
+        </div>
+        <div class="stat-value">{{ documents }}</div>
+        <div class="stat-label">Documents</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-certificate"></i>
+        </div>
+        <div class="stat-value">{{ certifications }}</div>
+        <div class="stat-label">Certifications</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon red">
+            <i class="fas fa-shield-alt"></i>
+        </div>
+        <div class="stat-value">{{ evidence }}</div>
+        <div class="stat-label">Evidence</div>
+    </div>
+</div>
+
+<!-- Filter Card -->
+<div class="filter-card">
+    <div class="filter-title">Filter Artifacts</div>
+    <form method="get" class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-select">
+                <option value="">All Categories</option>
+                <option value="policy" {% if category_filter == 'policy' %}selected{% endif %}>Policies</option>
+                <option value="procedure" {% if category_filter == 'procedure' %}selected{% endif %}>Procedures</option>
+                <option value="diagram" {% if category_filter == 'diagram' %}selected{% endif %}>Diagrams</option>
+                <option value="certification" {% if category_filter == 'certification' %}selected{% endif %}>Certifications</option>
+                <option value="evidence" {% if category_filter == 'evidence' %}selected{% endif %}>Evidence</option>
+                <option value="other" {% if category_filter == 'other' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Department</label>
+            <select name="department" class="form-select">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}" {% if department_filter == dept.id|stringformat:"s" %}selected{% endif %}>
+                    {{ dept.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end gap-2">
+            <button type="submit" class="btn-filter flex-grow-1">
+                <i class="fas fa-filter"></i> Apply Filters
+            </button>
+            <a href="{% url 'artifacts' %}" class="btn-clear">
+                <i class="fas fa-times"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Artifacts Table -->
+<div class="table-card">
+    <div class="table-header">
+        <div>
+            <div class="table-title">All Artifacts</div>
+            <div class="table-subtitle">{{ artifacts.count }} artifact{{ artifacts.count|pluralize }} found</div>
+        </div>
+    </div>
+    
+    {% if artifacts %}
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>File</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Department</th>
+                <th>Uploaded By</th>
+                <th>Size</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for artifact in artifacts %}
+            <tr>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="artifact-icon-small {{ artifact.file_extension }}">
+                            {% if artifact.file_extension == 'pdf' %}
+                                <i class="fas fa-file-pdf"></i>
+                            {% elif artifact.file_extension in 'doc,docx' %}
+                                <i class="fas fa-file-word"></i>
+                            {% elif artifact.file_extension in 'xls,xlsx' %}
+                                <i class="fas fa-file-excel"></i>
+                            {% elif artifact.file_extension in 'png,jpg,jpeg,gif' %}
+                                <i class="fas fa-file-image"></i>
+                            {% else %}
+                                <i class="fas fa-file"></i>
+                            {% endif %}
+                        </div>
+                        <span style="font-family: monospace; font-size: 12px; color: #86868b;">
+                            .{{ artifact.file_extension|upper }}
+                        </span>
+                    </div>
+                </td>
+                <td><strong>{{ artifact.title }}</strong></td>
+                <td>
+                    <span class="status-badge">{{ artifact.get_category_display }}</span>
+                </td>
+                <td>{{ artifact.department.name }}</td>
+                <td>{{ artifact.uploaded_by.get_full_name|default:artifact.uploaded_by.username }}</td>
+                <td>{{ artifact.file_size_mb }} MB</td>
+                <td>{{ artifact.created_at|date:"M d, Y" }}</td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <a href="{{ artifact.file.url }}" target="_blank" class="btn-action" title="Download">
+                            <i class="fas fa-download"></i>
+                        </a>
+                        <a href="{% url 'artifact_delete' artifact.id %}" class="btn-action delete" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 24px;">
+        <div class="empty-state">
+            <i class="fas fa-folder-open"></i>
+            <p><strong>No artifacts uploaded yet</strong></p>
+            <p style="margin-top: 12px; color: #86868b;">Upload your first system document, policy, or evidence file to get started.</p>
+            <a href="{% url 'artifact_create' %}" class="btn-primary-custom" style="margin-top: 20px;">
+                <i class="fas fa-upload"></i> Upload Your First Artifact
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.artifact-icon-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.artifact-icon-small.pdf {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.artifact-icon-small.doc,
+.artifact-icon-small.docx {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+}
+
+.artifact-icon-small.xls,
+.artifact-icon-small.xlsx {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+}
+
+.artifact-icon-small.png,
+.artifact-icon-small.jpg,
+.artifact-icon-small.jpeg,
+.artifact-icon-small.gif {
+    background: rgba(249, 115, 22, 0.1);
+    color: #ea580c;
+}
+</style>
+{% endblock %}

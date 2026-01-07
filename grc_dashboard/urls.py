@@ -1,4 +1,3 @@
-# grc_dashboard/urls.py
 from django.urls import path
 from . import views
 
@@ -19,6 +18,14 @@ urlpatterns = [
     # Audit Management
     path('audits/', views.audit_management, name='audit_management'),
     
-    # Issue Tracking
+    # Issue/PO&AM Tracking
     path('issues/', views.issue_tracking, name='issue_tracking'),
+    path('issues/create/', views.issue_create, name='issue_create'),
+    path('issues/<int:pk>/edit/', views.issue_update, name='issue_update'),
+    path('issues/<int:pk>/delete/', views.issue_delete, name='issue_delete'),
+    
+    # Artifacts
+    path('artifacts/', views.artifacts, name='artifacts'),
+    path('artifacts/upload/', views.artifact_create, name='artifact_create'),
+    path('artifacts/<int:pk>/delete/', views.artifact_delete, name='artifact_delete'),
 ]

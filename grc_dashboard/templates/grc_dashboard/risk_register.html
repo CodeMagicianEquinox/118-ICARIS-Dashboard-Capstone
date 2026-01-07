@@ -1,413 +1,401 @@
-<!-- templates/grc_dashboard/risk_register.html -->
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Risk Register - ICARIS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .heatmap-container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
-        }
+{% extends 'grc_dashboard/base.html' %}
 
-        .heatmap {
-            display: grid;
-            grid-template-columns: 80px repeat(5, 1fr);
-            grid-template-rows: 80px repeat(5, 1fr);
-            gap: 2px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
+{% block title %}ConMons - ICARIS{% endblock %}
 
-        .heatmap-cell {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 80px;
-            font-weight: 600;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            position: relative;
-        }
+{% block nav_conmons %}active{% endblock %}
 
-        .heatmap-cell:hover:not(.label) {
-            transform: scale(1.05);
-            z-index: 10;
-        }
+{% block extra_css %}
+/* Risk Heatmap Specific Styles */
+.heatmap-card {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 32px;
+}
 
-        .heatmap-cell.label {
-            background: transparent;
-            color: #2c3e50;
-            font-size: 0.9rem;
-            cursor: default;
-        }
+.heatmap-header {
+    margin-bottom: 32px;
+}
 
-        .heatmap-cell.empty {
-            background: transparent;
-        }
+.heatmap-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin-bottom: 8px;
+}
 
-        .heatmap-cell.low {
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-            color: white;
-        }
+.heatmap-subtitle {
+    font-size: 14px;
+    color: #86868b;
+}
 
-        .heatmap-cell.medium {
-            background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
-            color: white;
-        }
+.heatmap-grid {
+    display: grid;
+    grid-template-columns: 100px repeat(5, 1fr);
+    grid-template-rows: 80px repeat(5, 1fr);
+    gap: 8px;
+    max-width: 900px;
+    margin: 0 auto;
+}
 
-        .heatmap-cell.high {
-            background: linear-gradient(135deg, #e67e22 0%, #ca6f1e 100%);
-            color: white;
-        }
+.heatmap-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    border-radius: 8px;
+    position: relative;
+    transition: all 0.2s;
+}
 
-        .heatmap-cell.critical {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            color: white;
-        }
+.heatmap-cell.label {
+    background: transparent;
+    color: #86868b;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+}
 
-        .risk-count {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(0,0,0,0.3);
-            color: white;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-        }
+.heatmap-cell.empty {
+    background: transparent;
+}
 
-        .filter-bar {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
-        }
+.heatmap-cell.low {
+    background: #22c55e;
+    color: white;
+    cursor: pointer;
+}
 
-        .risk-table-card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        }
+.heatmap-cell.medium {
+    background: #f97316;
+    color: white;
+    cursor: pointer;
+}
 
-        .sidebar {
-            min-height: 100vh;
-            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
-            padding: 0;
-        }
+.heatmap-cell.high {
+    background: #ef4444;
+    color: white;
+    cursor: pointer;
+}
 
-        .sidebar .logo {
-            padding: 20px;
-            text-align: center;
-            color: white;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
+.heatmap-cell.critical {
+    background: #991b1b;
+    color: white;
+    cursor: pointer;
+}
 
-        .sidebar .nav-link {
-            color: rgba(255,255,255,0.8);
-            padding: 15px 20px;
-            border-left: 3px solid transparent;
-            transition: all 0.3s;
-        }
+.heatmap-cell:not(.label):not(.empty):hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
 
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            color: white;
-            background-color: rgba(255,255,255,0.1);
-            border-left-color: #3498db;
-        }
+.risk-count-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    color: white;
+    border-radius: 12px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
 
-        .sidebar .nav-link i {
-            margin-right: 10px;
-            width: 20px;
-        }
+.heatmap-legend {
+    text-align: center;
+    margin-top: 24px;
+    color: #86868b;
+    font-size: 13px;
+}
 
-        .main-content {
-            padding: 30px;
-            background: #f8f9fa;
-        }
+.risk-score-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+}
 
-        .page-header {
-            margin-bottom: 30px;
-        }
+.risk-score-badge.critical {
+    background: rgba(153, 27, 27, 0.1);
+    color: #991b1b;
+}
 
-        .page-header h1 {
-            color: #2c3e50;
-            font-weight: 600;
-        }
+.risk-score-badge.high {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
 
-        .risk-score-badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-    </style>
-</head>
-<body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-2 d-md-block sidebar">
-                <div class="logo">
-                    <h3><i class="fas fa-shield-alt"></i> GRC Hub</h3>
-                </div>
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'dashboard' %}">
-                                <i class="fas fa-tachometer-alt"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="{% url 'risk_register' %}">
-                                <i class="fas fa-exclamation-triangle"></i> Risk Register
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'compliance_tracking' %}">
-                                <i class="fas fa-check-circle"></i> Compliance
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'audit_management' %}">
-                                <i class="fas fa-clipboard-check"></i> Audits
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'issue_tracking' %}">
-                                <i class="fas fa-tasks"></i> Issues
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
+.risk-score-badge.medium {
+    background: rgba(249, 115, 22, 0.1);
+    color: #ea580c;
+}
 
-            <!-- Main Content -->
-            <main class="col-md-10 ms-sm-auto main-content">
-                <div class="page-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h1>Risk Register</h1>
-                            <p class="text-muted">Manage and monitor enterprise risks</p>
-                        </div>
-                        <a href="{% url 'risk_create' %}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add New Risk
-                        </a>
-                    </div>
-                </div>
+.risk-score-badge.low {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+}
 
-                <!-- Risk Heatmap -->
-                <div class="heatmap-container">
-                    <h5 class="mb-4"><i class="fas fa-th"></i> Risk Heatmap</h5>
-                    <div class="heatmap" id="riskHeatmap">
-                        <!-- Empty cell -->
-                        <div class="heatmap-cell empty"></div>
-                        <!-- Impact labels -->
-                        <div class="heatmap-cell label">1<br><small>Negligible</small></div>
-                        <div class="heatmap-cell label">2<br><small>Minor</small></div>
-                        <div class="heatmap-cell label">3<br><small>Moderate</small></div>
-                        <div class="heatmap-cell label">4<br><small>Major</small></div>
-                        <div class="heatmap-cell label">5<br><small>Severe</small></div>
-                        
-                        <!-- Likelihood 5 row -->
-                        <div class="heatmap-cell label">5<br><small>Almost Certain</small></div>
-                        <div class="heatmap-cell medium" data-likelihood="5" data-impact="1"></div>
-                        <div class="heatmap-cell high" data-likelihood="5" data-impact="2"></div>
-                        <div class="heatmap-cell high" data-likelihood="5" data-impact="3"></div>
-                        <div class="heatmap-cell critical" data-likelihood="5" data-impact="4"></div>
-                        <div class="heatmap-cell critical" data-likelihood="5" data-impact="5"></div>
-                        
-                        <!-- Likelihood 4 row -->
-                        <div class="heatmap-cell label">4<br><small>Likely</small></div>
-                        <div class="heatmap-cell medium" data-likelihood="4" data-impact="1"></div>
-                        <div class="heatmap-cell medium" data-likelihood="4" data-impact="2"></div>
-                        <div class="heatmap-cell high" data-likelihood="4" data-impact="3"></div>
-                        <div class="heatmap-cell high" data-likelihood="4" data-impact="4"></div>
-                        <div class="heatmap-cell critical" data-likelihood="4" data-impact="5"></div>
-                        
-                        <!-- Likelihood 3 row -->
-                        <div class="heatmap-cell label">3<br><small>Possible</small></div>
-                        <div class="heatmap-cell low" data-likelihood="3" data-impact="1"></div>
-                        <div class="heatmap-cell medium" data-likelihood="3" data-impact="2"></div>
-                        <div class="heatmap-cell medium" data-likelihood="3" data-impact="3"></div>
-                        <div class="heatmap-cell high" data-likelihood="3" data-impact="4"></div>
-                        <div class="heatmap-cell high" data-likelihood="3" data-impact="5"></div>
-                        
-                        <!-- Likelihood 2 row -->
-                        <div class="heatmap-cell label">2<br><small>Unlikely</small></div>
-                        <div class="heatmap-cell low" data-likelihood="2" data-impact="1"></div>
-                        <div class="heatmap-cell low" data-likelihood="2" data-impact="2"></div>
-                        <div class="heatmap-cell medium" data-likelihood="2" data-impact="3"></div>
-                        <div class="heatmap-cell medium" data-likelihood="2" data-impact="4"></div>
-                        <div class="heatmap-cell high" data-likelihood="2" data-impact="5"></div>
-                        
-                        <!-- Likelihood 1 row -->
-                        <div class="heatmap-cell label">1<br><small>Rare</small></div>
-                        <div class="heatmap-cell low" data-likelihood="1" data-impact="1"></div>
-                        <div class="heatmap-cell low" data-likelihood="1" data-impact="2"></div>
-                        <div class="heatmap-cell low" data-likelihood="1" data-impact="3"></div>
-                        <div class="heatmap-cell medium" data-likelihood="1" data-impact="4"></div>
-                        <div class="heatmap-cell medium" data-likelihood="1" data-impact="5"></div>
-                    </div>
-                    <div class="text-center mt-3">
-                        <small class="text-muted">
-                            <strong>Likelihood →</strong> (vertical) | <strong>Impact →</strong> (horizontal)
-                        </small>
-                    </div>
-                </div>
+@media (max-width: 768px) {
+    .heatmap-grid {
+        grid-template-columns: 60px repeat(5, 1fr);
+        font-size: 12px;
+    }
+}
+{% endblock %}
 
-                <!-- Filters -->
-                <div class="filter-bar">
-                    <form method="get" class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label">Severity</label>
-                            <select name="severity" class="form-select">
-                                <option value="">All Severities</option>
-                                <option value="critical" {% if severity_filter == 'critical' %}selected{% endif %}>Critical</option>
-                                <option value="high" {% if severity_filter == 'high' %}selected{% endif %}>High</option>
-                                <option value="medium" {% if severity_filter == 'medium' %}selected{% endif %}>Medium</option>
-                                <option value="low" {% if severity_filter == 'low' %}selected{% endif %}>Low</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Status</label>
-                            <select name="status" class="form-select">
-                                <option value="">All Statuses</option>
-                                <option value="open" {% if status_filter == 'open' %}selected{% endif %}>Open</option>
-                                <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
-                                <option value="mitigated" {% if status_filter == 'mitigated' %}selected{% endif %}>Mitigated</option>
-                                <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Department</label>
-                            <select name="department" class="form-select">
-                                <option value="">All Departments</option>
-                                {% for dept in departments %}
-                                <option value="{{ dept.id }}" {% if department_filter == dept.id|stringformat:"s" %}selected{% endif %}>
-                                    {{ dept.name }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary me-2">
-                                <i class="fas fa-filter"></i> Filter
-                            </button>
-                            <a href="{% url 'risk_register' %}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Clear
-                            </a>
-                        </div>
-                    </form>
-                </div>
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Continuous Monitoring (ConMons)</h1>
+        <p class="subtitle">Monitor and manage enterprise risks across all systems.</p>
+    </div>
+    <a href="{% url 'risk_create' %}" class="btn-primary-custom">
+        <i class="fas fa-plus"></i>Add New Risk
+    </a>
+</div>
 
-                <!-- Risk Table -->
-                <div class="risk-table-card">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Risk ID</th>
-                                    <th>Title</th>
-                                    <th>Department</th>
-                                    <th>Severity</th>
-                                    <th>Risk Score</th>
-                                    <th>Status</th>
-                                    <th>Owner</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for risk in risks %}
-                                <tr>
-                                    <td><strong>#{{ risk.id }}</strong></td>
-                                    <td>{{ risk.title }}</td>
-                                    <td>{{ risk.department.name }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ risk.severity }}">
-                                            {{ risk.get_severity_display }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="risk-score-badge bg-{{ risk.severity }}">
-                                            {{ risk.risk_score }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-secondary">
-                                            {{ risk.get_status_display }}
-                                        </span>
-                                    </td>
-                                    <td>{{ risk.owner.get_full_name|default:risk.owner.username }}</td>
-                                    <td>
-                                        <a href="{% url 'risk_update' risk.id %}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="{% url 'risk_delete' risk.id %}" class="btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="8" class="text-center py-4">
-                                        <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
-                                        <p class="text-muted">No risks found. Add your first risk to get started.</p>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </main>
+<!-- Risk Heatmap -->
+<div class="heatmap-card">
+    <div class="heatmap-header">
+        <div class="heatmap-title">Risk Heat Matrix</div>
+        <div class="heatmap-subtitle">5x5 matrix showing likelihood vs. impact assessment</div>
+    </div>
+    
+    <div class="heatmap-grid">
+        <!-- Top left empty cell -->
+        <div class="heatmap-cell empty"></div>
+        
+        <!-- Impact labels (top row) -->
+        <div class="heatmap-cell label">
+            <div>1</div>
+            <small>Negligible</small>
+        </div>
+        <div class="heatmap-cell label">
+            <div>2</div>
+            <small>Minor</small>
+        </div>
+        <div class="heatmap-cell label">
+            <div>3</div>
+            <small>Moderate</small>
+        </div>
+        <div class="heatmap-cell label">
+            <div>4</div>
+            <small>Major</small>
+        </div>
+        <div class="heatmap-cell label">
+            <div>5</div>
+            <small>Severe</small>
+        </div>
+        
+        <!-- Likelihood 5 row -->
+        <div class="heatmap-cell label">
+            <div>5</div>
+            <small>Almost Certain</small>
+        </div>
+        <div class="heatmap-cell medium" data-likelihood="5" data-impact="1"></div>
+        <div class="heatmap-cell high" data-likelihood="5" data-impact="2"></div>
+        <div class="heatmap-cell high" data-likelihood="5" data-impact="3"></div>
+        <div class="heatmap-cell critical" data-likelihood="5" data-impact="4"></div>
+        <div class="heatmap-cell critical" data-likelihood="5" data-impact="5"></div>
+        
+        <!-- Likelihood 4 row -->
+        <div class="heatmap-cell label">
+            <div>4</div>
+            <small>Likely</small>
+        </div>
+        <div class="heatmap-cell medium" data-likelihood="4" data-impact="1"></div>
+        <div class="heatmap-cell medium" data-likelihood="4" data-impact="2"></div>
+        <div class="heatmap-cell high" data-likelihood="4" data-impact="3"></div>
+        <div class="heatmap-cell high" data-likelihood="4" data-impact="4"></div>
+        <div class="heatmap-cell critical" data-likelihood="4" data-impact="5"></div>
+        
+        <!-- Likelihood 3 row -->
+        <div class="heatmap-cell label">
+            <div>3</div>
+            <small>Possible</small>
+        </div>
+        <div class="heatmap-cell low" data-likelihood="3" data-impact="1"></div>
+        <div class="heatmap-cell medium" data-likelihood="3" data-impact="2"></div>
+        <div class="heatmap-cell medium" data-likelihood="3" data-impact="3"></div>
+        <div class="heatmap-cell high" data-likelihood="3" data-impact="4"></div>
+        <div class="heatmap-cell high" data-likelihood="3" data-impact="5"></div>
+        
+        <!-- Likelihood 2 row -->
+        <div class="heatmap-cell label">
+            <div>2</div>
+            <small>Unlikely</small>
+        </div>
+        <div class="heatmap-cell low" data-likelihood="2" data-impact="1"></div>
+        <div class="heatmap-cell low" data-likelihood="2" data-impact="2"></div>
+        <div class="heatmap-cell medium" data-likelihood="2" data-impact="3"></div>
+        <div class="heatmap-cell medium" data-likelihood="2" data-impact="4"></div>
+        <div class="heatmap-cell high" data-likelihood="2" data-impact="5"></div>
+        
+        <!-- Likelihood 1 row -->
+        <div class="heatmap-cell label">
+            <div>1</div>
+            <small>Rare</small>
+        </div>
+        <div class="heatmap-cell low" data-likelihood="1" data-impact="1"></div>
+        <div class="heatmap-cell low" data-likelihood="1" data-impact="2"></div>
+        <div class="heatmap-cell low" data-likelihood="1" data-impact="3"></div>
+        <div class="heatmap-cell medium" data-likelihood="1" data-impact="4"></div>
+        <div class="heatmap-cell medium" data-likelihood="1" data-impact="5"></div>
+    </div>
+    
+    <div class="heatmap-legend">
+        <strong>Likelihood</strong> (vertical axis) × <strong>Impact</strong> (horizontal axis)
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-card">
+    <div class="filter-title">Filter Risks</div>
+    <form method="get" class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label">Severity Level</label>
+            <select name="severity" class="form-select">
+                <option value="">All Severities</option>
+                <option value="critical" {% if severity_filter == 'critical' %}selected{% endif %}>Critical</option>
+                <option value="high" {% if severity_filter == 'high' %}selected{% endif %}>High</option>
+                <option value="medium" {% if severity_filter == 'medium' %}selected{% endif %}>Medium</option>
+                <option value="low" {% if severity_filter == 'low' %}selected{% endif %}>Low</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="open" {% if status_filter == 'open' %}selected{% endif %}>Open</option>
+                <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                <option value="mitigated" {% if status_filter == 'mitigated' %}selected{% endif %}>Mitigated</option>
+                <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Department</label>
+            <select name="department" class="form-select">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                <option value="{{ dept.id }}" {% if department_filter == dept.id|stringformat:"s" %}selected{% endif %}>
+                    {{ dept.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end gap-2">
+            <button type="submit" class="btn-filter flex-grow-1">
+                <i class="fas fa-filter"></i> Apply Filters
+            </button>
+            <a href="{% url 'risk_register' %}" class="btn-clear">
+                <i class="fas fa-times"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Risk Table -->
+<div class="table-card">
+    <div class="table-header">
+        <div>
+            <div class="table-title">All Risks</div>
+            <div class="table-subtitle">{{ risks.count }} risk{{ risks.count|pluralize }} found</div>
         </div>
     </div>
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Department</th>
+                <th>Severity</th>
+                <th>Score</th>
+                <th>Status</th>
+                <th>Owner</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for risk in risks %}
+            <tr>
+                <td><strong>#{{ risk.id }}</strong></td>
+                <td>{{ risk.title }}</td>
+                <td>{{ risk.department.name }}</td>
+                <td>
+                    <span class="status-badge {{ risk.severity }}">
+                        {{ risk.get_severity_display }}
+                    </span>
+                </td>
+                <td>
+                    <span class="risk-score-badge {{ risk.severity }}">
+                        {{ risk.risk_score }}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge">
+                        {{ risk.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ risk.owner.get_full_name|default:risk.owner.username }}</td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'risk_update' risk.id %}" class="btn-action">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'risk_delete' risk.id %}" class="btn-action delete">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8">
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No risks found. Create your first risk to get started.</p>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Fetch risk data and populate heatmap
-        fetch("{% url 'risk_heatmap_data' %}")
-            .then(response => response.json())
-            .then(data => {
-                const riskCounts = {};
-                
-                // Count risks in each cell
-                data.risks.forEach(risk => {
-                    const key = `${risk.likelihood}-${risk.impact}`;
-                    riskCounts[key] = (riskCounts[key] || 0) + 1;
-                });
-                
-                // Add counts to heatmap cells
-                document.querySelectorAll('.heatmap-cell[data-likelihood]').forEach(cell => {
-                    const likelihood = cell.dataset.likelihood;
-                    const impact = cell.dataset.impact;
-                    const key = `${likelihood}-${impact}`;
-                    const count = riskCounts[key] || 0;
-                    
-                    if (count > 0) {
-                        const badge = document.createElement('div');
-                        badge.className = 'risk-count';
-                        badge.textContent = count;
-                        cell.appendChild(badge);
-                    }
-                });
+{% block extra_js %}
+<script>
+    // Fetch and populate heatmap risk counts
+    fetch("{% url 'risk_heatmap_data' %}")
+        .then(response => response.json())
+        .then(data => {
+            const riskCounts = {};
+            
+            data.risks.forEach(risk => {
+                const key = `${risk.likelihood}-${risk.impact}`;
+                riskCounts[key] = (riskCounts[key] || 0) + 1;
             });
-    </script>
-</body>
-</html>
+            
+            document.querySelectorAll('.heatmap-cell[data-likelihood]').forEach(cell => {
+                const likelihood = cell.dataset.likelihood;
+                const impact = cell.dataset.impact;
+                const key = `${likelihood}-${impact}`;
+                const count = riskCounts[key] || 0;
+                
+                if (count > 0) {
+                    const badge = document.createElement('div');
+                    badge.className = 'risk-count-badge';
+                    badge.textContent = count;
+                    cell.appendChild(badge);
+                }
+            });
+        });
+</script>
+{% endblock %}

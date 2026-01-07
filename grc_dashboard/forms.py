@@ -1,6 +1,6 @@
 # grc_dashboard/forms.py
 from django import forms
-from .models import Risk, ComplianceControl, Audit, Issue
+from .models import Risk, ComplianceControl, Audit, Issue, Artifact
 
 class RiskForm(forms.ModelForm):
     class Meta:
@@ -85,4 +85,16 @@ class IssueForm(forms.ModelForm):
             'related_audit': forms.Select(attrs={'class': 'form-control'}),
             'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'resolution_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+class ArtifactForm(forms.ModelForm):
+    class Meta:
+        model = Artifact
+        fields = ['title', 'description', 'category', 'department', 'file']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
+            'department': forms.Select(attrs={'class': 'form-control'}),
+            'file': forms.FileInput(attrs={'class': 'form-control'}),
         }

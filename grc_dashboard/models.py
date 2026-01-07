@@ -173,3 +173,38 @@ class Issue(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+class Artifact(models.Model):
+    CATEGORY_CHOICES = [
+        ('policy', 'Policy'),
+        ('procedure', 'Procedure'),
+        ('diagram', 'Diagram'),
+        ('certification', 'Certification'),
+        ('evidence', 'Evidence'),
+        ('other', 'Other'),
+    ]
+
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='artifacts')
+    file = models.FileField(upload_to='artifacts/%Y/%m/')
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='uploaded_artifacts')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def file_extension(self):
+        return self.file.name.split('.')[-1].lower() if self.file else ''
+
+    @property
+    def file_size_mb(self):
+        if self.file:
+            return round(self.file.size / (1024 * 1024), 2)
+        return 0
+
+    class Meta:
+        ordering = ['-created_at']   

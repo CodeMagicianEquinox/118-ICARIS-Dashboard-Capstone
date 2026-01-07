@@ -1,507 +1,304 @@
-<!-- templates/grc_dashboard/dashboard.html -->
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ICARIS: Integrated Compliance Assessment & Risk-Management Information System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #27ae60;
-            --warning-color: #f39c12;
-            --danger-color: #e74c3c;
-            --info-color: #16a085;
-            --light-bg: #ecf0f1;
-            --dark-text: #2c3e50;
-        }
+{% extends 'grc_dashboard/base.html' %}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            color: var(--dark-text);
-        }
+{% block title %}Executive Dashboard - ICARIS{% endblock %}
 
-        .sidebar {
-            min-height: 100vh;
-            background: linear-gradient(180deg, var(--primary-color) 0%, #34495e 100%);
-            padding: 0;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-        }
+{% block nav_dashboard %}active{% endblock %}
 
-        .sidebar .logo {
-            padding: 20px;
-            text-align: center;
-            color: white;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .sidebar .logo h3 {
-            margin: 0;
-            font-weight: 600;
-        }
-
-        .sidebar .nav-link {
-            color: rgba(255,255,255,0.8);
-            padding: 15px 20px;
-            border-left: 3px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            color: white;
-            background-color: rgba(255,255,255,0.1);
-            border-left-color: var(--secondary-color);
-        }
-
-        .sidebar .nav-link i {
-            margin-right: 10px;
-            width: 20px;
-        }
-
-        .main-content {
-            padding: 30px;
-        }
-
-        .page-header {
-            margin-bottom: 30px;
-        }
-
-        .page-header h1 {
-            font-size: 2rem;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        .stat-card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            overflow: hidden;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-        }
-
-        .stat-card .card-body {
-            padding: 25px;
-        }
-
-        .stat-card .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: white;
-            margin-bottom: 15px;
-        }
-
-        .stat-card.risk .stat-icon {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-        }
-
-        .stat-card.compliance .stat-icon {
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-        }
-
-        .stat-card.audit .stat-icon {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-        }
-
-        .stat-card.issue .stat-icon {
-            background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin: 0;
-        }
-
-        .stat-label {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-change {
-            font-size: 0.85rem;
-            margin-top: 5px;
-        }
-
-        .stat-change.positive {
-            color: var(--success-color);
-        }
-
-        .stat-change.negative {
-            color: var(--danger-color);
-        }
-
-        .chart-card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
-        }
-
-        .chart-card .card-header {
-            background-color: white;
-            border-bottom: 2px solid var(--light-bg);
-            padding: 20px;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        .table-card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        }
-
-        .table-card .card-header {
-            background-color: white;
-            border-bottom: 2px solid var(--light-bg);
-            padding: 20px;
-            font-weight: 600;
-            color: var(--primary-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .badge-status {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .badge-critical {
-            background-color: #e74c3c;
-            color: white;
-        }
-
-        .badge-high {
-            background-color: #f39c12;
-            color: white;
-        }
-
-        .badge-medium {
-            background-color: #3498db;
-            color: white;
-        }
-
-        .badge-low {
-            background-color: #95a5a6;
-            color: white;
-        }
-
-        .badge-compliant {
-            background-color: #27ae60;
-            color: white;
-        }
-
-        .badge-non-compliant {
-            background-color: #e74c3c;
-            color: white;
-        }
-
-        .progress-ring {
-            position: relative;
-            width: 120px;
-            height: 120px;
-        }
-
-        .activity-item {
-            padding: 15px 0;
-            border-bottom: 1px solid var(--light-bg);
-        }
-
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
-        .activity-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            color: white;
-        }
-
-        .activity-icon.risk {
-            background-color: var(--danger-color);
-        }
-
-        .activity-icon.audit {
-            background-color: var(--secondary-color);
-        }
-
-        .activity-icon.issue {
-            background-color: var(--warning-color);
-        }
-    </style>
-</head>
-<body>
-    <div class="container-fluid">
-        <div class="row">
-<!-- Sidebar -->
-<nav class="col-md-2 d-md-block sidebar">
-    <div class="logo">
-        <h3><i class="fas fa-shield-alt"></i> ICARIS</h3>
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Executive Dashboard</h1>
+        <p class="subtitle">System-wide compliance posture and risk overview.</p>
     </div>
-    <div class="position-sticky pt-3">
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link active" href="{% url 'dashboard' %}">
-                    <i class="fas fa-tachometer-alt"></i>
-                    Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'issue_tracking' %}">
-                    <i class="fas fa-tasks"></i>
-                    PO&AMs
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'risk_register' %}">
-                    <i class="fas fa-chart-line"></i>
-                    ConMons
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="fas fa-folder"></i>
-                    Artifacts
-                </a>
-            </li>
-            <li class="nav-item" style="margin-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 20px;">
-                <a class="nav-link" href="{% url 'logout' %}">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Logout
-                </a>
-            </li>
-        </ul>
+    <div class="header-actions">
+        <button class="btn-export">
+            <i class="fas fa-download"></i> Export Report
+        </button>
+        <button class="btn-primary-custom">
+            <i class="fas fa-cog"></i> Manage RFIs
+        </button>
     </div>
-</nav>
+</div>
 
-            <!-- Main Content -->
-            <main class="col-md-10 ms-sm-auto main-content">
-                <div class="page-header">
-                    <h1>GRC Dashboard</h1>
-                    <p class="text-muted">Overview of Governance, Risk, and Compliance metrics</p>
-                </div>
-
-                <!-- Key Metrics -->
-                <div class="row mb-4">
-                    <div class="col-md-3 mb-3">
-                        <div class="card stat-card risk">
-                            <div class="card-body">
-                                <div class="stat-icon">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                </div>
-                                <h2 class="stat-value">{{ critical_risks }}</h2>
-                                <p class="stat-label">Critical Risks</p>
-                                <p class="stat-change negative">
-                                    <i class="fas fa-arrow-up"></i> {{ open_risks }} Open
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card stat-card compliance">
-                            <div class="card-body">
-                                <div class="stat-icon">
-                                    <i class="fas fa-check-circle"></i>
-                                </div>
-                                <h2 class="stat-value">{{ compliance_rate }}%</h2>
-                                <p class="stat-label">Compliance Rate</p>
-                                <p class="stat-change positive">
-                                    <i class="fas fa-arrow-up"></i> {{ total_controls }} Controls
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card stat-card audit">
-                            <div class="card-body">
-                                <div class="stat-icon">
-                                    <i class="fas fa-clipboard-check"></i>
-                                </div>
-                                <h2 class="stat-value">{{ upcoming_audits }}</h2>
-                                <p class="stat-label">Upcoming Audits</p>
-                                <p class="stat-change">
-                                    <i class="fas fa-sync"></i> {{ in_progress_audits }} In Progress
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card stat-card issue">
-                            <div class="card-body">
-                                <div class="stat-icon">
-                                    <i class="fas fa-tasks"></i>
-                                </div>
-                                <h2 class="stat-value">{{ open_issues }}</h2>
-                                <p class="stat-label">Open Issues</p>
-                                <p class="stat-change negative">
-                                    <i class="fas fa-exclamation"></i> {{ overdue_issues }} Overdue
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Charts -->
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <div class="card chart-card">
-                            <div class="card-header">
-                                Risk Distribution by Severity
-                            </div>
-                            <div class="card-body">
-                                <canvas id="riskChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card chart-card">
-                            <div class="card-header">
-                                Compliance Status
-                            </div>
-                            <div class="card-body">
-                                <canvas id="complianceChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Activities -->
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card table-card">
-                            <div class="card-header">
-                                <span>Recent Activities</span>
-                                <a href="{% url 'risk_register' %}" class="btn btn-sm btn-primary">View All</a>
-                            </div>
-                            <div class="card-body">
-                                <ul class="list-unstyled">
-                                    {% for risk in recent_risks %}
-                                    <li class="activity-item d-flex align-items-start">
-                                        <div class="activity-icon risk me-3">
-                                            <i class="fas fa-exclamation-triangle"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1">{{ risk.title }}</h6>
-                                            <small class="text-muted">
-                                                {{ risk.department.name }} • 
-                                                <span class="badge-status badge-{{ risk.severity }}">{{ risk.get_severity_display }}</span>
-                                            </small>
-                                        </div>
-                                        <small class="text-muted">{{ risk.created_at|timesince }} ago</small>
-                                    </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
+<!-- Metrics Grid -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-header">
+            <div>
+                <div class="metric-title">Compliance Score</div>
+            </div>
+            <div class="metric-icon blue">
+                <i class="fas fa-chart-line"></i>
+            </div>
+        </div>
+        <div class="metric-value">{{ compliance_rate|floatformat:0 }}%</div>
+        <div class="metric-footer">
+            <span class="metric-change positive">
+                <i class="fas fa-arrow-up"></i> +2%
+            </span>
+            <span class="metric-label">vs. last month</span>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Risk Distribution Chart
-        const riskData = {
-            labels: [{% for item in risks_by_severity %}'{{ item.severity|title }}',{% endfor %}],
+    <div class="metric-card">
+        <div class="metric-header">
+            <div>
+                <div class="metric-title">Open PO&AMs</div>
+            </div>
+            <div class="metric-icon orange">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+        </div>
+        <div class="metric-value">{{ open_issues }}</div>
+        <div class="metric-footer">
+            <span class="metric-change negative">
+                <i class="fas fa-arrow-down"></i> -1
+            </span>
+            <span class="metric-label">Requires attention</span>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-header">
+            <div>
+                <div class="metric-title">Pending RFIs</div>
+            </div>
+            <div class="metric-icon red">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+        </div>
+        <div class="metric-value">{{ critical_risks }}</div>
+        <div class="metric-footer">
+            <span class="metric-change neutral">
+                <i class="fas fa-minus"></i> 0
+            </span>
+            <span class="metric-label">Awaiting artifacts</span>
+        </div>
+    </div>
+
+    <div class="metric-card">
+        <div class="metric-header">
+            <div>
+                <div class="metric-title">Total Systems</div>
+            </div>
+            <div class="metric-icon green">
+                <i class="fas fa-server"></i>
+            </div>
+        </div>
+        <div class="metric-value">{{ total_controls|add:4 }}</div>
+        <div class="metric-footer">
+            <span class="metric-change positive">
+                <i class="fas fa-arrow-up"></i> +1
+            </span>
+            <span class="metric-label">{{ total_controls }} Compliant</span>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="charts-grid">
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">RFI & PO&AM Activity</div>
+            <div class="chart-subtitle">6-month trend of items opened vs closed</div>
+        </div>
+        <div class="chart-container">
+            <canvas id="activityChart"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">Risk Distribution</div>
+            <div class="chart-subtitle">Current open items by risk level</div>
+        </div>
+        <div class="chart-container">
+            <canvas id="riskChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Action Items Table -->
+<div class="table-card">
+    <div class="table-header">
+        <div>
+            <div class="table-title">Recent Action Items</div>
+            <div class="table-subtitle">Latest updates across all systems</div>
+        </div>
+        <a href="{% url 'risk_register' %}" class="view-all-link">View All</a>
+    </div>
+    <table class="custom-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>System</th>
+                <th>Status</th>
+                <th>Risk</th>
+                <th>Due Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for risk in recent_risks %}
+            <tr>
+                <td><strong>{{ risk.id }}</strong></td>
+                <td>{{ risk.title }}</td>
+                <td>{{ risk.department.name }}</td>
+                <td>
+                    <span class="status-badge {% if risk.status == 'closed' %}completed{% elif risk.status == 'open' %}pending{% else %}critical{% endif %}">
+                        {{ risk.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge {{ risk.severity }}">
+                        {{ risk.get_severity_display }}
+                    </span>
+                </td>
+                <td>{{ risk.target_closure_date|default:"N/A" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No recent action items to display</p>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Activity Chart (Bar Chart)
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    new Chart(activityCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
             datasets: [{
-                data: [{% for item in risks_by_severity %}{{ item.count }},{% endfor %}],
+                label: 'Opened',
+                data: [4, 3, 6, 2, 5, 3],
+                backgroundColor: '#2563eb',
+                borderRadius: 6,
+                barThickness: 24,
+            }, {
+                label: 'Closed',
+                data: [2, 5, 3, 4, 6, 2],
+                backgroundColor: '#d1d5db',
+                borderRadius: 6,
+                barThickness: 24,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    border: {
+                        display: false
+                    },
+                    grid: {
+                        color: '#f5f5f7'
+                    }
+                },
+                x: {
+                    border: {
+                        display: false
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Risk Distribution (Doughnut Chart) - WITH REAL DATA
+    const riskCtx = document.getElementById('riskChart').getContext('2d');
+
+    // Build data from Django context
+    const riskData = {
+        'low': 0,
+        'medium': 0,
+        'high': 0,
+        'critical': 0
+    };
+
+    // Populate from server data
+    {% for item in risks_by_severity %}
+        riskData['{{ item.severity }}'] = {{ item.count }};
+    {% endfor %}
+
+    new Chart(riskCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Low', 'Moderate', 'High', 'Critical'],
+            datasets: [{
+                data: [
+                    riskData.low,
+                    riskData.medium,
+                    riskData.high,
+                    riskData.critical
+                ],
                 backgroundColor: [
-                    '#e74c3c',  // Critical
-                    '#f39c12',  // High
-                    '#3498db',  // Medium
-                    '#95a5a6'   // Low
+                    '#22c55e',
+                    '#f97316',
+                    '#ef4444',
+                    '#991b1b'
                 ],
                 borderWidth: 0
             }]
-        };
-
-        new Chart(document.getElementById('riskChart'), {
-            type: 'doughnut',
-            data: riskData,
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 15,
-                            font: {
-                                size: 12
-                            }
-                        }
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '75%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
                     }
                 }
             }
-        });
-
-// Compliance Status Chart
-const complianceData = {
-    labels: ['Compliant', 'Non-Compliant', 'In Progress', 'Not Assessed'],
-    datasets: [{
-        label: 'Controls',
-        data: [3, 1, 0, 0],  // Will show data from your database
-        backgroundColor: [
-            '#27ae60',  // Compliant
-            '#e74c3c',  // Non-compliant
-            '#3498db',  // In Progress
-            '#95a5a6'   // Not Assessed
-        ],
-        borderWidth: 0
-    }]
-};
-
-        new Chart(document.getElementById('complianceChart'), {
-            type: 'bar',
-            data: complianceData,
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
-                        }
-                    }
-                }
+        },
+        plugins: [{
+            id: 'centerText',
+            beforeDraw: function(chart) {
+                const width = chart.width;
+                const height = chart.height;
+                const ctx = chart.ctx;
+                ctx.restore();
+                const fontSize = (height / 160).toFixed(2);
+                ctx.font = fontSize + "em sans-serif";
+                ctx.textBaseline = "middle";
+                const text = "{{ open_risks }}";
+                const textX = Math.round((width - ctx.measureText(text).width) / 2);
+                const textY = height / 2 - 10;
+                ctx.fillStyle = '#1d1d1f';
+                ctx.font = 'bold ' + (fontSize * 2) + 'em sans-serif';
+                ctx.fillText(text, textX, textY);
+                
+                ctx.font = (fontSize * 0.6) + 'em sans-serif';
+                ctx.fillStyle = '#86868b';
+                const subText = "OPEN RISKS";
+                const subTextX = Math.round((width - ctx.measureText(subText).width) / 2);
+                ctx.fillText(subText, subTextX, textY + 30);
+                ctx.save();
             }
-        });
-    </script>
-</body>
-</html>
+        }]
+    });
+</script>
+{% endblock %}
