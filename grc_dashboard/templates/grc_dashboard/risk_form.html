@@ -1,0 +1,148 @@
+{% extends 'grc_dashboard/base.html' %}
+
+{% block title %}Edit ConMon Requirement - ICARIS{% endblock %}
+
+{% block nav_conmons %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Edit ConMon Requirement</h1>
+        <p class="subtitle">Update compliance requirement details and evidence.</p>
+    </div>
+</div>
+
+<div class="filter-card" style="max-width: 900px;">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="row g-3">
+            <div class="col-md-12">
+                <label class="form-label">Requirement Name *</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.title.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label">Description *</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Department *</label>
+                {{ form.department }}
+                {% if form.department.errors %}
+                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.department.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Owner *</label>
+                {{ form.owner }}
+                {% if form.owner.errors %}
+                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.owner.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Severity *</label>
+                {{ form.severity }}
+                {% if form.severity.errors %}
+                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.severity.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Likelihood (1-5) *</label>
+                {{ form.likelihood }}
+                {% if form.likelihood.errors %}
+                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.likelihood.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Impact (1-5) *</label>
+                {{ form.impact }}
+                {% if form.impact.errors %}
+                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.impact.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Status *</label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.status.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Compliance Percentage (0-100%) *</label>
+                {{ form.compliance_percentage }}
+                {% if form.compliance_percentage.errors %}
+                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.compliance_percentage.errors }}</div>
+                {% endif %}
+                <small style="color: #86868b; display: block; margin-top: 4px;">
+                    ≥80% = Compliant, <80% = Non-Compliant
+                </small>
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label">Mitigation/Compliance Plan</label>
+                {{ form.mitigation_plan }}
+                {% if form.mitigation_plan.errors %}
+                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.mitigation_plan.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Identified Date</label>
+                {{ form.identified_date }}
+                {% if form.identified_date.errors %}
+                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.identified_date.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Target Closure Date</label>
+                {{ form.target_closure_date }}
+                {% if form.target_closure_date.errors %}
+                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.target_closure_date.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label">Compliance Evidence File</label>
+                {{ form.evidence_file }}
+                {% if form.evidence_file.errors %}
+                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.evidence_file.errors }}</div>
+                {% endif %}
+                {% if risk and risk.evidence_file %}
+                    <div style="margin-top: 8px;">
+                        <small style="color: #86868b;">
+                            Current file: <a href="{{ risk.evidence_file.url }}" target="_blank" style="color: #2563eb;">{{ risk.evidence_file.name }}</a>
+                        </small>
+                    </div>
+                {% endif %}
+                <small style="color: #86868b; display: block; margin-top: 4px;">
+                    Upload evidence documents (PDF, Word, Excel, Images)
+                </small>
+            </div>
+
+            <div class="col-md-12" style="margin-top: 24px;">
+                <button type="submit" class="btn-primary-custom">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+                <a href="{% url 'risk_register' %}" class="btn-clear" style="margin-left: 12px;">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

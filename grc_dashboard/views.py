@@ -195,24 +195,39 @@ def issue_tracking(request):
     return render(request, 'grc_dashboard/issue_tracking.html', context)
 
 
-# CRUD Views for Risk
+# Create Risk (if you want to re-enable adding later)
 @login_required
 def risk_create(request):
+    """Create a new ConMon requirement"""
     if request.method == 'POST':
-        form = RiskForm(request.POST)
+        form = RiskForm(request.POST, request.FILES)
         if form.is_valid():
             risk = form.save(commit=False)
-            risk.owner = request.user
+            
+            # If evidence file is uploaded, mark as uploaded
+            if 'evidence_file' in request.FILES:
+                risk.evidence_uploaded = True
+                from django.utils import timezone
+                risk.last_evidence_update = timezone.now()
+            
             risk.save()
+            messages.success(request, 'ConMon requirement created successfully!')
             return redirect('risk_register')
     else:
         form = RiskForm()
     
-    return render(request, 'grc_dashboard/risk_form.html', {'form': form, 'action': 'Create'})
+    return render(request, 'grc_dashboard/risk_form.html', {
+        'form': form,
+        'action': 'Create'
+    })
+
+
+
 
 
 @login_required
 def risk_update(request, pk):
+    """Update/Edit a ConMon requirement"""
     risk = get_object_or_404(Risk, pk=pk)
     
     if request.method == 'POST':
@@ -228,6 +243,7 @@ def risk_update(request, pk):
 
 @login_required
 def risk_delete(request, pk):
+    """Delete a ConMon requirement"""
     risk = get_object_or_404(Risk, pk=pk)
     
     if request.method == 'POST':

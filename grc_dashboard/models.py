@@ -3,6 +3,10 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 class Department(models.Model):
     name = models.CharField(max_length=100)
@@ -51,10 +55,62 @@ class Risk(models.Model):
     target_closure_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Compliance tracking fields
+    compliance_percentage = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Compliance percentage (0-100%)",
+        verbose_name="Compliance %"
+    )
+    
+    evidence_uploaded = models.BooleanField(
+        default=False,
+        help_text="Has compliance evidence been uploaded?",
+        verbose_name="Evidence Uploaded"
+    )
+    
+    evidence_file = models.FileField(
+        upload_to='compliance_evidence/',
+        null=True,
+        blank=True,
+        help_text="Compliance evidence file",
+        verbose_name="Evidence File"
+    )
+    
+    last_evidence_update = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Last time evidence was updated",
+        verbose_name="Last Evidence Update"
+    )
 
     @property
     def risk_score(self):
         return self.likelihood * self.impact
+    
+    def get_compliance_status(self):
+        """Returns Compliant or Non-Compliant based on percentage"""
+        return "Compliant" if self.compliance_percentage >= 80 else "Non-Compliant"
+    
+    def get_compliance_color_class(self):
+        """Returns CSS class based on compliance percentage"""
+        if self.compliance_percentage >= 80:
+            return "high"  # Green
+        elif self.compliance_percentage >= 50:
+            return "medium"  # Orange
+        else:
+            return "low"  # Red
+    
+    def update_compliance_from_evidence(self):
+        """Update compliance percentage when evidence is uploaded"""
+        if self.evidence_uploaded and self.evidence_file:
+            self.compliance_percentage = 100
+            self.last_evidence_update = timezone.now()
+            self.save()
+        else:
+            self.compliance_percentage = 0
+            self.save()
 
     def __str__(self):
         return f"{self.title} ({self.severity})"
@@ -208,3 +264,31 @@ class Artifact(models.Model):
 
     class Meta:
         ordering = ['-created_at']   
+
+class UserProfile(models.Model):
+    """Extended user profile with department and role information"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.department if self.department else 'No Department'}"
+    
+    def can_manage_poams(self):
+        """Check if user can create/edit/delete PO&AMs"""
+        # Admin users can always manage PO&AMs
+        if self.user.is_superuser or self.user.is_staff:
+            return True
+        # Security department users can manage PO&AMs
+        if self.department and self.department.name == 'Security':
+            return True
+        return False
+
+# Auto-create profile when user is created
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
