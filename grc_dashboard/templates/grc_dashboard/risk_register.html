@@ -127,6 +127,7 @@
     border-radius: 12px;
     overflow: hidden;
     position: relative;
+    margin: 0 auto;
 }
 
 .compliance-bar {
@@ -160,6 +161,7 @@
     border-radius: 6px;
     font-size: 13px;
     font-weight: 600;
+    display: inline-block;
 }
 
 .status-badge-noncompliant {
@@ -169,6 +171,93 @@
     border-radius: 6px;
     font-size: 13px;
     font-weight: 600;
+    display: inline-block;
+}
+
+/* Centered Table Container */
+.table-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.requirements-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.requirements-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin-bottom: 8px;
+}
+
+.requirements-count {
+    font-size: 15px;
+    color: #86868b;
+}
+
+/* Enhanced Table Styles */
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.data-table thead th {
+    background: #f5f5f7;
+    color: #86868b;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 16px 20px;
+    text-align: center;
+    border-bottom: 2px solid #e5e5e7;
+}
+
+.data-table thead th:first-child {
+    text-align: left;
+    border-top-left-radius: 8px;
+}
+
+.data-table thead th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.data-table tbody tr {
+    background: white;
+    border-bottom: 1px solid #f5f5f7;
+    transition: all 0.2s;
+}
+
+.data-table tbody tr:hover {
+    background: #fafafa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.data-table tbody td {
+    padding: 20px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.data-table tbody td:first-child {
+    text-align: left;
+}
+
+.requirement-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin-bottom: 4px;
+}
+
+.requirement-description {
+    font-size: 13px;
+    color: #86868b;
+    line-height: 1.5;
 }
 
 @media (max-width: 768px) {
@@ -397,72 +486,74 @@
 </div>
 
 <!-- ConMon Requirements Table -->
-<div class="table-container">
-    <div style="margin-bottom: 16px;">
-        <h2 style="font-size: 20px; font-weight: 600; color: #1d1d1f; margin-bottom: 4px;">ConMon Requirements</h2>
-        <p style="font-size: 14px; color: #86868b;">{{ risks|length }} requirements found</p>
+<div class="table-wrapper">
+    <div class="requirements-header">
+        <h2 class="requirements-title">ConMon Requirements</h2>
+        <p class="requirements-count">{{ risks|length }} requirements found</p>
     </div>
 
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>NAME</th>
-                <th>COMPLIANCE</th>
-                <th>STATUS</th>
-                <th>OWNER</th>
-                <th>ACTIONS</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for risk in risks %}
-            <tr>
-                <td>
-                    <strong>{{ risk.title }}</strong>
-                    {% if risk.description %}
-                    <br><small style="color: #86868b;">{{ risk.description|truncatewords:20 }}</small>
-                    {% endif %}
-                </td>
-                <td>
-                    <div class="compliance-bar-container">
-                        <div class="compliance-bar {% if risk.compliance_percentage >= 80 %}high{% elif risk.compliance_percentage >= 50 %}medium{% else %}low{% endif %}" 
-                             style="width: {{ risk.compliance_percentage }}%;">
-                            {{ risk.compliance_percentage }}%
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>NAME</th>
+                    <th>COMPLIANCE</th>
+                    <th>STATUS</th>
+                    <th>OWNER</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for risk in risks %}
+                <tr>
+                    <td>
+                        <div class="requirement-name">{{ risk.title }}</div>
+                        {% if risk.description %}
+                        <div class="requirement-description">{{ risk.description|truncatewords:20 }}</div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="compliance-bar-container">
+                            <div class="compliance-bar {% if risk.compliance_percentage >= 80 %}high{% elif risk.compliance_percentage >= 50 %}medium{% else %}low{% endif %}" 
+                                 style="width: {{ risk.compliance_percentage }}%;">
+                                {{ risk.compliance_percentage }}%
+                            </div>
                         </div>
-                    </div>
-                </td>
-                <td>
-                    {% if risk.compliance_percentage >= 80 %}
-                    <span class="status-badge-compliant">
-                        <i class="fas fa-check-circle"></i> Compliant
-                    </span>
-                    {% else %}
-                    <span class="status-badge-noncompliant">
-                        <i class="fas fa-times-circle"></i> Non-Compliant
-                    </span>
-                    {% endif %}
-                </td>
-                <td>{{ risk.owner.username|default:"Unassigned" }}</td>
-                <td>
-                    <div class="action-buttons">
-                        <a href="{% url 'risk_update' risk.pk %}" class="btn-icon" title="Edit Requirement">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <a href="{% url 'risk_delete' risk.pk %}" class="btn-icon btn-icon-danger" title="Delete Requirement">
-                            <i class="fas fa-trash"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" style="text-align: center; padding: 40px;">
-                    <i class="fas fa-clipboard-list" style="font-size: 48px; color: #d1d1d6; margin-bottom: 16px;"></i>
-                    <p style="color: #86868b;">No ConMon requirements found.</p>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    </td>
+                    <td>
+                        {% if risk.compliance_percentage >= 80 %}
+                        <span class="status-badge-compliant">
+                            <i class="fas fa-check-circle"></i> Compliant
+                        </span>
+                        {% else %}
+                        <span class="status-badge-noncompliant">
+                            <i class="fas fa-times-circle"></i> Non-Compliant
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>{{ risk.owner.username|default:"Unassigned" }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'risk_update' risk.pk %}" class="btn-icon" title="Edit Requirement">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'risk_delete' risk.pk %}" class="btn-icon btn-icon-danger" title="Delete Requirement">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 60px 40px;">
+                        <i class="fas fa-clipboard-list" style="font-size: 48px; color: #d1d1d6; margin-bottom: 16px; display: block;"></i>
+                        <p style="color: #86868b; font-size: 15px;">No ConMon requirements found.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>

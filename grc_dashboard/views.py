@@ -334,3 +334,46 @@ def artifact_delete(request, pk):
         return redirect('artifacts')
     
     return render(request, 'grc_dashboard/artifact_confirm_delete.html', {'artifact': artifact})
+
+
+def user_guide(request):
+    """
+    Display the user guide with sections for getting started,
+    features overview, and FAQ
+    """
+    context = {
+        'page_title': 'User Guide',
+        'guide_sections': [
+            {
+                'id': 'getting-started',
+                'title': 'Getting Started',
+                'icon': 'fas fa-play-circle',
+                'description': 'Learn the basics of navigating the GRC Hub'
+            },
+            {
+                'id': 'risk-management',
+                'title': 'Risk Management',
+                'icon': 'fas fa-exclamation-triangle',
+                'description': 'How to create and manage risks'
+            },
+            {
+                'id': 'compliance',
+                'title': 'Compliance Tracking',
+                'icon': 'fas fa-check-circle',
+                'description': 'Track and monitor compliance requirements'
+            },
+            {
+                'id': 'audits',
+                'title': 'Audit Management',
+                'icon': 'fas fa-clipboard-check',
+                'description': 'Manage audits and findings'
+            },
+            {
+                'id': 'issues',
+                'title': 'Issue Tracking',
+                'icon': 'fas fa-tasks',
+                'description': 'Track and resolve issues'
+            }
+        ]
+    }
+    return render(request, 'grc_dashboard/user_guide.html', context)

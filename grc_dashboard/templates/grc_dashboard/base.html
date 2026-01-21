@@ -737,9 +737,16 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a   a href="{% url 'artifacts' %}" class="nav-link {% block nav_artifacts %}{% endblock %}">
+                <a href="{% url 'artifacts' %}" class="nav-link {% block nav_artifacts %}{% endblock %}">
                     <i class="fas fa-folder"></i>
                     <span>Artifacts</span>
+                </a>
+            </li>
+            <!-- ✅ USER GUIDE LINK ADDED HERE -->
+            <li class="nav-item">
+                <a href="{% url 'user_guide' %}" class="nav-link {% block nav_user_guide %}{% endblock %}">
+                    <i class="fas fa-book-open"></i>
+                    <span>User Guide</span>
                 </a>
             </li>
             <li class="nav-item" style="margin-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 20px;">

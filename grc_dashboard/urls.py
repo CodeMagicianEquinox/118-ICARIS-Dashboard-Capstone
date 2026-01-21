@@ -11,6 +11,9 @@ urlpatterns = [
     path('risks/<int:pk>/edit/', views.risk_update, name='risk_update'),
     path('risks/<int:pk>/delete/', views.risk_delete, name='risk_delete'),
     path('api/risk-heatmap/', views.risk_heatmap_data, name='risk_heatmap_data'),
+
+    # User Guide
+    path('user-guide/', views.user_guide, name='user_guide'),
     
     # Compliance
     path('compliance/', views.compliance_tracking, name='compliance_tracking'),
