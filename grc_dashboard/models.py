@@ -232,12 +232,13 @@ class Issue(models.Model):
 
 class Artifact(models.Model):
     CATEGORY_CHOICES = [
-        ('policy', 'Policy'),
-        ('procedure', 'Procedure'),
-        ('diagram', 'Diagram'),
+        ('ato', 'ATO'),
         ('certification', 'Certification'),
+        ('diagram', 'Diagram'),
         ('evidence', 'Evidence'),
         ('other', 'Other'),
+        ('policy', 'Policy'),
+        ('procedure', 'Procedure'),
     ]
 
     title = models.CharField(max_length=200)

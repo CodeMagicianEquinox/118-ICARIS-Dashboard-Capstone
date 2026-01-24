@@ -1,71 +1,463 @@
-{% extends 'grc_dashboard/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ action }} Artifact - GRC Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block title %}Upload Artifact - ICARIS{% endblock %}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f8f9fa;
+            color: #1f2937;
+            padding: 2rem;
+        }
 
-{% block nav_artifacts %}active{% endblock %}
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
 
-{% block content %}
-<div class="page-header">
-    <div>
-        <h1>Upload Artifact</h1>
-        <p class="subtitle">Upload a system document, policy, or evidence file.</p>
-    </div>
-</div>
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+        }
 
-<div class="filter-card" style="max-width: 800px;">
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        
-        <div class="row g-3">
-            <div class="col-md-12">
-                <label class="form-label">Title *</label>
-                {{ form.title }}
-                {% if form.title.errors %}
-                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.title.errors }}</div>
-                {% endif %}
+        .back-link:hover {
+            color: #5568d3;
+            transform: translateX(-3px);
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .card-header h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-size: 0.95rem;
+        }
+
+        .form-group label .required {
+            color: #ef4444;
+            margin-left: 0.25rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-text {
+            display: block;
+            margin-top: 0.5rem;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .error {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: block;
+        }
+
+        .errorlist {
+            list-style: none;
+            padding: 0;
+            margin: 0.5rem 0 0 0;
+        }
+
+        .errorlist li {
+            color: #dc2626;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            background: #fee2e2;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        /* File Input Styling */
+        .file-input-wrapper {
+            position: relative;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            padding: 0.75rem;
+            cursor: pointer;
+        }
+
+        .file-input-wrapper input[type="file"]::file-selector-button {
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 1rem;
+            transition: all 0.3s;
+        }
+
+        .file-input-wrapper input[type="file"]::file-selector-button:hover {
+            background: #5568d3;
+        }
+
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .btn {
+            padding: 0.875rem 1.75rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+            text-decoration: none;
+        }
+
+        /* Category Icons */
+        .category-preview {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .category-option {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category-option.active {
+            border-color: #667eea;
+            background: #f3f4f6;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            .card-header {
+                padding: 1.5rem;
+            }
+
+            .card-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .card-body {
+                padding: 1.5rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box h3 {
+            color: #1e40af;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-box ul {
+            margin-left: 1.5rem;
+            color: #1e3a8a;
+            font-size: 0.9rem;
+        }
+
+        .info-box ul li {
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'artifacts' %}" class="back-link">
+            ← Back to Artifacts
+        </a>
+
+        <div class="card">
+            <div class="card-header">
+                <h1>📤 {{ action }} Artifact</h1>
+                <p>Upload a new document, policy, certification, or evidence file</p>
             </div>
 
-            <div class="col-md-12">
-                <label class="form-label">Description</label>
-                {{ form.description }}
-            </div>
+            <div class="card-body">
+                <!-- Info Box -->
+                <div class="info-box">
+                    <h3>ℹ️ Upload Guidelines</h3>
+                    <ul>
+                        <li><strong>Supported formats:</strong> PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, TXT</li>
+                        <li><strong>Max file size:</strong> 10 MB</li>
+                        <li><strong>File naming:</strong> Use descriptive names (e.g., "ISO27001_Policy_v2.pdf")</li>
+                        <li><strong>Categories:</strong> Choose the most appropriate category for easy retrieval</li>
+                    </ul>
+                </div>
 
-            <div class="col-md-6">
-                <label class="form-label">Category *</label>
-                {{ form.category }}
-                {% if form.category.errors %}
-                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.category.errors }}</div>
-                {% endif %}
-            </div>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
 
-            <div class="col-md-6">
-                <label class="form-label">Department *</label>
-                {{ form.department }}
-                {% if form.department.errors %}
-                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.department.errors }}</div>
-                {% endif %}
-            </div>
+                    <!-- Title Field -->
+                    <div class="form-group">
+                        <label for="{{ form.title.id_for_label }}">
+                            Title
+                            <span class="required">*</span>
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.title.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <small class="form-text">Give this artifact a clear, descriptive name</small>
+                    </div>
 
-            <div class="col-md-12">
-                <label class="form-label">File *</label>
-                {{ form.file }}
-                {% if form.file.errors %}
-                    <div style="color: #ef4444; font-size: 13px; margin-top: 4px;">{{ form.file.errors }}</div>
-                {% endif %}
-                <small style="color: #86868b; display: block; margin-top: 4px;">
-                    Supported formats: PDF, Word, Excel, Images (PNG, JPG)
-                </small>
-            </div>
+                    <!-- Description Field -->
+                    <div class="form-group">
+                        <label for="{{ form.description.id_for_label }}">
+                            Description
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.description.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <small class="form-text">Optional: Add details about this artifact's purpose or contents</small>
+                    </div>
 
-            <div class="col-md-12" style="margin-top: 24px;">
-                <button type="submit" class="btn-primary-custom">
-                    <i class="fas fa-upload"></i> Upload Artifact
-                </button>
-                <a href="{% url 'artifacts' %}" class="btn-clear" style="margin-left: 12px;">
-                    <i class="fas fa-times"></i> Cancel
-                </a>
+                    <!-- Category Field -->
+                    <div class="form-group">
+                        <label for="{{ form.category.id_for_label }}">
+                            Category
+                            <span class="required">*</span>
+                        </label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.category.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <div class="category-preview">
+                            <div class="category-option">✅ ATO</div>
+                            <div class="category-option">🏆 Certification</div>
+                            <div class="category-option">📊 Diagram</div>
+                            <div class="category-option">🔍 Evidence</div>
+                            <div class="category-option">📎 Other</div>
+                            <div class="category-option">📄 Policy</div>
+                            <div class="category-option">📋 Procedure</div>
+                        </div>
+                    </div>
+
+                    <!-- Department Field -->
+                    <div class="form-group">
+                        <label for="{{ form.department.id_for_label }}">
+                            Department
+                            <span class="required">*</span>
+                        </label>
+                        {{ form.department }}
+                        {% if form.department.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.department.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <small class="form-text">Select the department responsible for this artifact</small>
+                    </div>
+
+                    <!-- File Upload Field -->
+                    <div class="form-group">
+                        <label for="{{ form.file.id_for_label }}">
+                            File
+                            <span class="required">*</span>
+                        </label>
+                        <div class="file-input-wrapper">
+                            {{ form.file }}
+                        </div>
+                        {% if form.file.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.file.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <small class="form-text">Choose a file to upload (PDF, DOC, DOCX, JPG, PNG, XLSX, CSV - Max 10MB)</small>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            📤 Upload Artifact
+                        </button>
+                        <a href="{% url 'artifacts' %}" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
-    </form>
-</div>
-{% endblock %}
+    </div>
+
+    <script>
+        // Add visual feedback when file is selected
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+                if (this.files && this.files[0]) {
+                    const fileName = this.files[0].name;
+                    const fileSize = (this.files[0].size / 1024 / 1024).toFixed(2);
+                    console.log(`File selected: ${fileName} (${fileSize} MB)`);
+                    
+                    if (fileSize > 10) {
+                        alert('⚠️ Warning: File size exceeds 10MB. Upload may fail.');
+                    }
+                }
+            });
+        }
+
+        // Highlight selected category
+        const categorySelect = document.querySelector('select[name="category"]');
+        const categoryOptions = document.querySelectorAll('.category-option');
+        
+        if (categorySelect) {
+            categorySelect.addEventListener('change', function() {
+                categoryOptions.forEach(option => {
+                    option.classList.remove('active');
+                });
+                
+                const selectedValue = this.value;
+                const categoryMap = {
+                    'ato': 0,
+                    'certification': 1,
+                    'diagram': 2,
+                    'evidence': 3,
+                    'other': 4,
+                    'policy': 5,
+                    'procedure': 6
+                };
+                
+                if (categoryMap[selectedValue] !== undefined) {
+                    categoryOptions[categoryMap[selectedValue]].classList.add('active');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

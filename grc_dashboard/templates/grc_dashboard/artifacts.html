@@ -1,209 +1,548 @@
-{% extends 'grc_dashboard/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Artifacts - GRC Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block title %}Artifacts - ICARIS{% endblock %}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f8f9fa;
+            color: #1f2937;
+        }
 
-{% block nav_artifacts %}active{% endblock %}
+        .artifacts-page {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
 
-{% block content %}
-<div class="page-header">
-    <div>
-        <h1>System Artifacts</h1>
-        <p class="subtitle">Centralized repository for system documentation and evidence.</p>
-    </div>
-    <a href="{% url 'artifact_create' %}" class="btn-primary-custom">
-        <i class="fas fa-upload"></i>Upload Artifact
-    </a>
-</div>
+        .artifacts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
 
-<!-- Stats Grid -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-icon blue">
-            <i class="fas fa-folder"></i>
+        .artifacts-header h1 {
+            font-size: 2rem;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .artifacts-header p {
+            color: #6b7280;
+        }
+
+        .btn-upload {
+            padding: 0.875rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Success/Error Messages */
+        .alert-container {
+            margin-bottom: 2rem;
+        }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
+        /* COUNTER CARDS */
+        .counter-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .counter-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .counter-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .counter-card.total { 
+            border-color: #667eea; 
+            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+        }
+        
+        .counter-card.documents { 
+            border-color: #3b82f6; 
+            background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+        }
+        
+        .counter-card.certifications { 
+            border-color: #10b981; 
+            background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);
+        }
+        
+        .counter-card.evidence { 
+            border-color: #f59e0b; 
+            background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%);
+        }
+
+        .counter-icon {
+            font-size: 2.5rem;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+        }
+
+        .counter-card.total .counter-icon { background: rgba(102, 126, 234, 0.1); }
+        .counter-card.documents .counter-icon { background: rgba(59, 130, 246, 0.1); }
+        .counter-card.certifications .counter-icon { background: rgba(16, 185, 129, 0.1); }
+        .counter-card.evidence .counter-icon { background: rgba(245, 158, 11, 0.1); }
+
+        .counter-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1f2937;
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+
+        .counter-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .filter-section h3 {
+            margin-bottom: 1rem;
+            color: #1f2937;
+            font-size: 1.1rem;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .btn-filter {
+            padding: 0.75rem 1.5rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-clear {
+            padding: 0.75rem 1.5rem;
+            background: #e5e7eb;
+            color: #4b5563;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Artifacts List */
+        .artifacts-list {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .artifact-count {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Artifacts Grid */
+        .artifacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .artifact-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .artifact-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .artifact-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .artifact-details h4 {
+            font-size: 1.1rem;
+            color: #1f2937;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .artifact-meta {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .artifact-type,
+        .artifact-dept {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .artifact-type {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .artifact-dept {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .artifact-date {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .artifact-description {
+            font-size: 0.9rem;
+            color: #4b5563;
+            margin-top: 0.75rem;
+        }
+
+        .artifact-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .artifact-actions a,
+        .artifact-actions button {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            text-decoration: none;
+            color: #374151;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .artifact-actions button:hover {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #dc2626;
+        }
+
+        @media (max-width: 768px) {
+            .artifacts-page {
+                padding: 1rem;
+            }
+            .artifacts-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .counter-cards {
+                grid-template-columns: 1fr 1fr;
+            }
+            .artifacts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="artifacts-page">
+        <!-- Header -->
+        <div class="artifacts-header">
+            <div>
+                <h1>System Artifacts</h1>
+                <p>Centralized repository for policies, documentation, and evidence</p>
+            </div>
+            <a href="{% url 'artifact_create' %}" class="btn-upload">
+                📤 Upload Artifact
+            </a>
         </div>
-        <div class="stat-value">{{ total_artifacts }}</div>
-        <div class="stat-label">Total Artifacts</div>
-    </div>
 
-    <div class="stat-card">
-        <div class="stat-icon green">
-            <i class="fas fa-file-pdf"></i>
-        </div>
-        <div class="stat-value">{{ documents }}</div>
-        <div class="stat-label">Documents</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-icon orange">
-            <i class="fas fa-certificate"></i>
-        </div>
-        <div class="stat-value">{{ certifications }}</div>
-        <div class="stat-label">Certifications</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-icon red">
-            <i class="fas fa-shield-alt"></i>
-        </div>
-        <div class="stat-value">{{ evidence }}</div>
-        <div class="stat-label">Evidence</div>
-    </div>
-</div>
-
-<!-- Filter Card -->
-<div class="filter-card">
-    <div class="filter-title">Filter Artifacts</div>
-    <form method="get" class="row g-3">
-        <div class="col-md-4">
-            <label class="form-label">Category</label>
-            <select name="category" class="form-select">
-                <option value="">All Categories</option>
-                <option value="policy" {% if category_filter == 'policy' %}selected{% endif %}>Policies</option>
-                <option value="procedure" {% if category_filter == 'procedure' %}selected{% endif %}>Procedures</option>
-                <option value="diagram" {% if category_filter == 'diagram' %}selected{% endif %}>Diagrams</option>
-                <option value="certification" {% if category_filter == 'certification' %}selected{% endif %}>Certifications</option>
-                <option value="evidence" {% if category_filter == 'evidence' %}selected{% endif %}>Evidence</option>
-                <option value="other" {% if category_filter == 'other' %}selected{% endif %}>Other</option>
-            </select>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Department</label>
-            <select name="department" class="form-select">
-                <option value="">All Departments</option>
-                {% for dept in departments %}
-                <option value="{{ dept.id }}" {% if department_filter == dept.id|stringformat:"s" %}selected{% endif %}>
-                    {{ dept.name }}
-                </option>
+        <!-- Display Messages -->
+        {% if messages %}
+            <div class="alert-container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
                 {% endfor %}
-            </select>
-        </div>
-        <div class="col-md-4 d-flex align-items-end gap-2">
-            <button type="submit" class="btn-filter flex-grow-1">
-                <i class="fas fa-filter"></i> Apply Filters
-            </button>
-            <a href="{% url 'artifacts' %}" class="btn-clear">
-                <i class="fas fa-times"></i>
-            </a>
-        </div>
-    </form>
-</div>
+            </div>
+        {% endif %}
 
-<!-- Artifacts Table -->
-<div class="table-card">
-    <div class="table-header">
-        <div>
-            <div class="table-title">All Artifacts</div>
-            <div class="table-subtitle">{{ artifacts.count }} artifact{{ artifacts.count|pluralize }} found</div>
+        <!-- COUNTER CARDS -->
+        <div class="counter-cards">
+            <div class="counter-card total">
+                <div class="counter-icon">📁</div>
+                <div class="counter-info">
+                    <div class="counter-number">{{ total_artifacts }}</div>
+                    <div class="counter-label">TOTAL ARTIFACTS</div>
+                </div>
+            </div>
+
+            <div class="counter-card documents">
+                <div class="counter-icon">📄</div>
+                <div class="counter-info">
+                    <div class="counter-number">{{ documents_count }}</div>
+                    <div class="counter-label">DOCUMENTS</div>
+                </div>
+            </div>
+
+            <div class="counter-card certifications">
+                <div class="counter-icon">🏆</div>
+                <div class="counter-info">
+                    <div class="counter-number">{{ certifications_count }}</div>
+                    <div class="counter-label">CERTIFICATIONS</div>
+                </div>
+            </div>
+
+            <div class="counter-card evidence">
+                <div class="counter-icon">🔍</div>
+                <div class="counter-info">
+                    <div class="counter-number">{{ evidence_count }}</div>
+                    <div class="counter-label">EVIDENCE</div>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    {% if artifacts %}
-    <table class="custom-table">
-        <thead>
-            <tr>
-                <th>File</th>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Department</th>
-                <th>Uploaded By</th>
-                <th>Size</th>
-                <th>Date</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for artifact in artifacts %}
-            <tr>
-                <td>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div class="artifact-icon-small {{ artifact.file_extension }}">
-                            {% if artifact.file_extension == 'pdf' %}
-                                <i class="fas fa-file-pdf"></i>
-                            {% elif artifact.file_extension in 'doc,docx' %}
-                                <i class="fas fa-file-word"></i>
-                            {% elif artifact.file_extension in 'xls,xlsx' %}
-                                <i class="fas fa-file-excel"></i>
-                            {% elif artifact.file_extension in 'png,jpg,jpeg,gif' %}
-                                <i class="fas fa-file-image"></i>
-                            {% else %}
-                                <i class="fas fa-file"></i>
-                            {% endif %}
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <h3>Filter Artifacts</h3>
+            <form method="get" action="{% url 'artifacts' %}">
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label>Category</label>
+                        <select name="category">
+                            <option value="">All Categories</option>
+                            <option value="ato" {% if category_filter == 'ato' %}selected{% endif %}>ATO</option>
+                            <option value="certification" {% if category_filter == 'certification' %}selected{% endif %}>Certification</option>
+                            <option value="diagram" {% if category_filter == 'diagram' %}selected{% endif %}>Diagram</option>
+                            <option value="evidence" {% if category_filter == 'evidence' %}selected{% endif %}>Evidence</option>
+                            <option value="other" {% if category_filter == 'other' %}selected{% endif %}>Other</option>
+                            <option value="policy" {% if category_filter == 'policy' %}selected{% endif %}>Policy</option>
+                            <option value="procedure" {% if category_filter == 'procedure' %}selected{% endif %}>Procedure</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Department</label>
+                        <select name="department">
+                            <option value="">All Departments</option>
+                            {% for dept in departments %}
+                                <option value="{{ dept.id }}" {% if department_filter == dept.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-filter">🔍 Apply Filters</button>
+                    <a href="{% url 'artifacts' %}" class="btn-clear">✕ Clear</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Artifacts List -->
+        <div class="artifacts-list">
+            <div class="list-header">
+                <h3>All Artifacts</h3>
+                <span class="artifact-count">{{ artifacts.count }} artifact(s) found</span>
+            </div>
+
+            {% if artifacts %}
+                <div class="artifacts-grid">
+                    {% for artifact in artifacts %}
+                        <div class="artifact-card">
+                            <div class="artifact-icon">
+                                {% if artifact.category == 'ato' %}✅
+                                {% elif artifact.category == 'certification' %}🏆
+                                {% elif artifact.category == 'diagram' %}📊
+                                {% elif artifact.category == 'evidence' %}🔍
+                                {% elif artifact.category == 'other' %}📎
+                                {% elif artifact.category == 'policy' %}📄
+                                {% elif artifact.category == 'procedure' %}📋
+                                {% else %}📎
+                                {% endif %}
+                            </div>
+                            <div class="artifact-details">
+                                <h4>{{ artifact.title }}</h4>
+                                <div class="artifact-meta">
+                                    <span class="artifact-type">{{ artifact.get_category_display }}</span>
+                                    <span class="artifact-dept">{{ artifact.department.name }}</span>
+                                </div>
+                                <p class="artifact-date">
+                                    Uploaded: {{ artifact.created_at|date:"M d, Y" }} by {{ artifact.uploaded_by.username }}
+                                </p>
+                                {% if artifact.description %}
+                                    <p class="artifact-description">
+                                        {{ artifact.description|truncatewords:20 }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                            <div class="artifact-actions">
+                                <a href="{{ artifact.file.url }}" target="_blank">👁️ View</a>
+                                <a href="{{ artifact.file.url }}" download>⬇️ Download</a>
+                                <form method="post" action="{% url 'artifact_delete' artifact.pk %}" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit" onclick="return confirm('Are you sure you want to delete this artifact?');">
+                                        🗑️ Delete
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-                        <span style="font-family: monospace; font-size: 12px; color: #86868b;">
-                            .{{ artifact.file_extension|upper }}
-                        </span>
-                    </div>
-                </td>
-                <td><strong>{{ artifact.title }}</strong></td>
-                <td>
-                    <span class="status-badge">{{ artifact.get_category_display }}</span>
-                </td>
-                <td>{{ artifact.department.name }}</td>
-                <td>{{ artifact.uploaded_by.get_full_name|default:artifact.uploaded_by.username }}</td>
-                <td>{{ artifact.file_size_mb }} MB</td>
-                <td>{{ artifact.created_at|date:"M d, Y" }}</td>
-                <td>
-                    <div class="d-flex gap-2">
-                        <a href="{{ artifact.file.url }}" target="_blank" class="btn-action" title="Download">
-                            <i class="fas fa-download"></i>
-                        </a>
-                        <a href="{% url 'artifact_delete' artifact.id %}" class="btn-action delete" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <div style="padding: 24px;">
-        <div class="empty-state">
-            <i class="fas fa-folder-open"></i>
-            <p><strong>No artifacts uploaded yet</strong></p>
-            <p style="margin-top: 12px; color: #86868b;">Upload your first system document, policy, or evidence file to get started.</p>
-            <a href="{% url 'artifact_create' %}" class="btn-primary-custom" style="margin-top: 20px;">
-                <i class="fas fa-upload"></i> Upload Your First Artifact
-            </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📂</div>
+                    <h3>No artifacts uploaded yet</h3>
+                    <p>Upload your first system document, policy, or evidence file to get started</p>
+                    <a href="{% url 'artifact_create' %}" class="btn-upload" style="margin-top: 1rem; display: inline-block;">
+                        📤 Upload Your First Artifact
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </div>
-    {% endif %}
-</div>
-
-<style>
-.artifact-icon-small {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-}
-
-.artifact-icon-small.pdf {
-    background: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-}
-
-.artifact-icon-small.doc,
-.artifact-icon-small.docx {
-    background: rgba(37, 99, 235, 0.1);
-    color: #2563eb;
-}
-
-.artifact-icon-small.xls,
-.artifact-icon-small.xlsx {
-    background: rgba(34, 197, 94, 0.1);
-    color: #16a34a;
-}
-
-.artifact-icon-small.png,
-.artifact-icon-small.jpg,
-.artifact-icon-small.jpeg,
-.artifact-icon-small.gif {
-    background: rgba(249, 115, 22, 0.1);
-    color: #ea580c;
-}
-</style>
-{% endblock %}
+</body>
+</html>
