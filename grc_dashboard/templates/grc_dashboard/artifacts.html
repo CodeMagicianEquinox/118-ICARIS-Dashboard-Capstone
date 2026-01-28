@@ -482,67 +482,66 @@
             </form>
         </div>
 
-        <!-- Artifacts List -->
-        <div class="artifacts-list">
-            <div class="list-header">
-                <h3>All Artifacts</h3>
-                <span class="artifact-count">{{ artifacts.count }} artifact(s) found</span>
-            </div>
-
-            {% if artifacts %}
-                <div class="artifacts-grid">
-                    {% for artifact in artifacts %}
-                        <div class="artifact-card">
-                            <div class="artifact-icon">
-                                {% if artifact.category == 'ato' %}✅
-                                {% elif artifact.category == 'certification' %}🏆
-                                {% elif artifact.category == 'diagram' %}📊
-                                {% elif artifact.category == 'evidence' %}🔍
-                                {% elif artifact.category == 'other' %}📎
-                                {% elif artifact.category == 'policy' %}📄
-                                {% elif artifact.category == 'procedure' %}📋
-                                {% else %}📎
-                                {% endif %}
-                            </div>
-                            <div class="artifact-details">
-                                <h4>{{ artifact.title }}</h4>
-                                <div class="artifact-meta">
-                                    <span class="artifact-type">{{ artifact.get_category_display }}</span>
-                                    <span class="artifact-dept">{{ artifact.department.name }}</span>
-                                </div>
-                                <p class="artifact-date">
-                                    Uploaded: {{ artifact.created_at|date:"M d, Y" }} by {{ artifact.uploaded_by.username }}
-                                </p>
-                                {% if artifact.description %}
-                                    <p class="artifact-description">
-                                        {{ artifact.description|truncatewords:20 }}
-                                    </p>
-                                {% endif %}
-                            </div>
-                            <div class="artifact-actions">
-                                <a href="{{ artifact.file.url }}" target="_blank">👁️ View</a>
-                                <a href="{{ artifact.file.url }}" download>⬇️ Download</a>
-                                <form method="post" action="{% url 'artifact_delete' artifact.pk %}" style="margin: 0;">
-                                    {% csrf_token %}
-                                    <button type="submit" onclick="return confirm('Are you sure you want to delete this artifact?');">
-                                        🗑️ Delete
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-state">
-                    <div class="empty-icon">📂</div>
-                    <h3>No artifacts uploaded yet</h3>
-                    <p>Upload your first system document, policy, or evidence file to get started</p>
-                    <a href="{% url 'artifact_create' %}" class="btn-upload" style="margin-top: 1rem; display: inline-block;">
-                        📤 Upload Your First Artifact
-                    </a>
-                </div>
-            {% endif %}
-        </div>
+<!-- Artifacts List -->
+<div class="artifacts-list">
+    <div class="list-header">
+        <h3>All Artifacts</h3>
+        <span class="artifact-count">{{ artifacts.count }} artifact(s) found</span>
     </div>
+
+    {% if artifacts.count > 0 %}
+        <div class="artifacts-grid">
+            {% for artifact in artifacts %}
+                <div class="artifact-card">
+                    <div class="artifact-icon">
+                        {% if artifact.category == 'ato' %}✅
+                        {% elif artifact.category == 'certification' %}🏆
+                        {% elif artifact.category == 'diagram' %}📊
+                        {% elif artifact.category == 'evidence' %}🔍
+                        {% elif artifact.category == 'other' %}📎
+                        {% elif artifact.category == 'policy' %}📄
+                        {% elif artifact.category == 'procedure' %}📋
+                        {% else %}📎
+                        {% endif %}
+                    </div>
+                    <div class="artifact-details">
+                        <h4>{{ artifact.title }}</h4>
+                        <div class="artifact-meta">
+                            <span class="artifact-type">{{ artifact.get_category_display }}</span>
+                            <span class="artifact-dept">{{ artifact.department.name }}</span>
+                        </div>
+                        <p class="artifact-date">
+                            Uploaded: {{ artifact.created_at|date:"M d, Y" }} by {{ artifact.uploaded_by.username }}
+                        </p>
+                        {% if artifact.description %}
+                            <p class="artifact-description">
+                                {{ artifact.description|truncatewords:20 }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="artifact-actions">
+                        <a href="{{ artifact.file.url }}" target="_blank">👁️ View</a>
+                        <a href="{{ artifact.file.url }}" download>⬇️ Download</a>
+                        <form method="post" action="{% url 'artifact_delete' artifact.pk %}" style="margin: 0;">
+                            {% csrf_token %}
+                            <button type="submit" onclick="return confirm('Are you sure you want to delete this artifact?');">
+                                🗑️ Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📂</div>
+            <h3>No artifacts uploaded yet</h3>
+            <p>Upload your first system document, policy, or evidence file to get started</p>
+            <a href="{% url 'artifact_create' %}" class="btn-upload" style="margin-top: 1rem; display: inline-block;">
+                📤 Upload Your First Artifact
+            </a>
+        </div>
+    {% endif %}
+</div>
 </body>
 </html>

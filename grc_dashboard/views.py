@@ -1,11 +1,15 @@
 # grc_dashboard/views.py
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q, Avg
 from django.utils import timezone
+from django.contrib import messages
 from datetime import timedelta
-from .models import Risk, ComplianceControl, Audit, Issue, Department
+import pandas as pd
+import csv
+
+from .models import Risk, ComplianceControl, Audit, Issue, Department, Artifact
 from .forms import RiskForm, ComplianceControlForm, AuditForm, IssueForm
 
 @login_required
@@ -195,7 +199,6 @@ def issue_tracking(request):
     return render(request, 'grc_dashboard/issue_tracking.html', context)
 
 
-# Create Risk (if you want to re-enable adding later)
 @login_required
 def risk_create(request):
     """Create a new ConMon requirement"""
@@ -207,7 +210,6 @@ def risk_create(request):
             # If evidence file is uploaded, mark as uploaded
             if 'evidence_file' in request.FILES:
                 risk.evidence_uploaded = True
-                from django.utils import timezone
                 risk.last_evidence_update = timezone.now()
             
             risk.save()
@@ -220,9 +222,6 @@ def risk_create(request):
         'form': form,
         'action': 'Create'
     })
-
-
-
 
 
 @login_required
@@ -252,15 +251,47 @@ def risk_delete(request, pk):
     
     return render(request, 'grc_dashboard/risk_confirm_delete.html', {'risk': risk})
 
+
 @login_required
 def artifacts(request):
-    """Artifacts document management view"""
-    context = {
-        'artifacts': [],
+    """Artifacts document management view with filtering and statistics"""
+    
+    # Get all artifacts
+    artifacts_list = Artifact.objects.select_related('department', 'uploaded_by').all()
+    
+    # Apply filters
+    category_filter = request.GET.get('category')
+    department_filter = request.GET.get('department')
+    
+    if category_filter:
+        artifacts_list = artifacts_list.filter(category=category_filter)
+    if department_filter:
+        artifacts_list = artifacts_list.filter(department_id=department_filter)
+    
+    # Get all departments for filter dropdown
+    departments = Department.objects.all()
+    
+    # Calculate statistics by category
+    all_artifacts = Artifact.objects.all()
+    stats = {
+        'total': all_artifacts.count(),
+        'policy': all_artifacts.filter(category='policy').count(),
+        'certification': all_artifacts.filter(category='certification').count(),
+        'evidence': all_artifacts.filter(category='evidence').count(),
+        'documents': all_artifacts.filter(category__in=['policy', 'procedure']).count(),
     }
+    
+    context = {
+        'artifacts': artifacts_list,
+        'departments': departments,
+        'stats': stats,
+        'category_filter': category_filter,
+        'department_filter': department_filter,
+    }
+    
     return render(request, 'grc_dashboard/artifacts.html', context)
 
-# CRUD Views for Issues/PO&AMs
+
 @login_required
 def issue_create(request):
     if request.method == 'POST':
@@ -302,10 +333,10 @@ def issue_delete(request, pk):
     
     return render(request, 'grc_dashboard/issue_confirm_delete.html', {'issue': issue})
 
-# CRUD Views for Artifacts
+
 @login_required
 def artifact_create(request):
-    from .models import Artifact
+    """Upload a new artifact"""
     from .forms import ArtifactForm
     
     if request.method == 'POST':
@@ -314,21 +345,27 @@ def artifact_create(request):
             artifact = form.save(commit=False)
             artifact.uploaded_by = request.user
             artifact.save()
+            
+            messages.success(
+                request, 
+                f'✅ {artifact.get_category_display()} uploaded successfully!'
+            )
+            
             return redirect('artifacts')
     else:
         form = ArtifactForm()
     
-    return render(request, 'grc_dashboard/artifact_form.html', {'form': form, 'action': 'Upload'})
+    return render(request, 'grc_dashboard/artifact_form.html', {
+        'form': form, 
+        'action': 'Upload'
+    })
 
 
 @login_required
 def artifact_delete(request, pk):
-    from .models import Artifact
-    
     artifact = get_object_or_404(Artifact, pk=pk)
     
     if request.method == 'POST':
-        # Delete the file from storage
         artifact.file.delete()
         artifact.delete()
         return redirect('artifacts')
@@ -337,10 +374,7 @@ def artifact_delete(request, pk):
 
 
 def user_guide(request):
-    """
-    Display the user guide with sections for getting started,
-    features overview, and FAQ
-    """
+    """Display the user guide"""
     context = {
         'page_title': 'User Guide',
         'guide_sections': [
@@ -377,3 +411,321 @@ def user_guide(request):
         ]
     }
     return render(request, 'grc_dashboard/user_guide.html', context)
+
+
+# ============================================================================
+# VULNERABILITY MANAGEMENT VIEWS
+# ============================================================================
+
+@login_required
+def vulnerability_management(request):
+    """Main vulnerability management view"""
+    from .models import Vulnerability, VulnerabilityScan
+    
+    vulnerabilities = Vulnerability.objects.select_related('scan').all()
+    scans = VulnerabilityScan.objects.all()
+    
+    # Apply filters
+    severity_filter = request.GET.get('severity')
+    status_filter = request.GET.get('status')
+    scan_filter = request.GET.get('scan')
+    search_query = request.GET.get('search')
+    
+    if severity_filter:
+        vulnerabilities = vulnerabilities.filter(severity=severity_filter)
+    if status_filter:
+        vulnerabilities = vulnerabilities.filter(status=status_filter)
+    if scan_filter:
+        vulnerabilities = vulnerabilities.filter(scan_id=scan_filter)
+    if search_query:
+        vulnerabilities = vulnerabilities.filter(
+            Q(cve__icontains=search_query) |
+            Q(dns_name__icontains=search_query) |
+            Q(ip_address__icontains=search_query) |
+            Q(plugin_name__icontains=search_query)
+        )
+    
+    # Statistics
+    stats = {
+        'total': Vulnerability.objects.count(),
+        'critical': Vulnerability.objects.filter(severity='critical', status='open').count(),
+        'high': Vulnerability.objects.filter(severity='high', status='open').count(),
+        'affected_hosts': Vulnerability.objects.values('dns_name').distinct().count(),
+    }
+    
+    context = {
+        'vulnerabilities': vulnerabilities,
+        'scans': scans,
+        'stats': stats,
+        'severity_filter': severity_filter,
+        'status_filter': status_filter,
+        'scan_filter': scan_filter,
+        'search_query': search_query,
+    }
+    
+    return render(request, 'grc_dashboard/vulnerability_management.html', context)
+
+
+@login_required
+def vulnerability_detail(request, pk):
+    """Detailed view of a single vulnerability"""
+    from .models import Vulnerability
+    
+    vulnerability = get_object_or_404(Vulnerability, pk=pk)
+    notes = vulnerability.notes.all()
+    
+    # Get all vulnerabilities for the same CVE
+    related_vulns = Vulnerability.objects.filter(cve=vulnerability.cve).exclude(pk=pk)
+    
+    # Get all vulnerabilities on the same host
+    same_host_vulns = Vulnerability.objects.filter(dns_name=vulnerability.dns_name).exclude(pk=pk)[:10]
+    
+    context = {
+        'vulnerability': vulnerability,
+        'notes': notes,
+        'related_vulns': related_vulns,
+        'same_host_vulns': same_host_vulns,
+    }
+    
+    return render(request, 'grc_dashboard/vulnerability_detail.html', context)
+
+
+@login_required
+def vulnerability_upload_scan(request):
+    """Upload and process vulnerability scan file"""
+    from .models import VulnerabilityScan
+    
+    if request.method == 'POST':
+        if 'scan_file' not in request.FILES:
+            messages.error(request, 'No file uploaded')
+            return redirect('vulnerability_management')
+        
+        scan_file = request.FILES['scan_file']
+        
+        # Validate file type
+        if not scan_file.name.endswith(('.xlsx', '.xls', '.csv')):
+            messages.error(request, 'Invalid file type. Please upload Excel (.xlsx, .xls) or CSV file.')
+            return redirect('vulnerability_management')
+        
+        # Create scan record
+        scan = VulnerabilityScan.objects.create(
+            name=scan_file.name,
+            file=scan_file,
+            uploaded_by=request.user
+        )
+        
+        try:
+            # Process the file
+            process_scan_file(scan)
+            messages.success(request, f'Scan uploaded successfully! Found {scan.vulnerabilities_found} vulnerabilities across {scan.hosts_scanned} hosts.')
+        except Exception as e:
+            messages.error(request, f'Error processing scan file: {str(e)}')
+            scan.delete()
+        
+        return redirect('vulnerability_management')
+    
+    return render(request, 'grc_dashboard/vulnerability_upload.html')
+
+
+def process_scan_file(scan):
+    """Process uploaded scan file and create vulnerability records"""
+    from .models import Vulnerability
+    
+    file_path = scan.file.path
+    
+    # Read the file
+    if file_path.endswith('.csv'):
+        df = pd.read_csv(file_path)
+    else:
+        df = pd.read_excel(file_path)
+    
+    # Expected columns (map to your template)
+    column_mapping = {
+        'Plugin': 'plugin_id',
+        'Plugin name': 'plugin_name',
+        'Severity': 'severity',
+        'IP address': 'ip_address',
+        'DNS name': 'dns_name',
+        'synopsis': 'synopsis',
+        'Description': 'description',
+        'Steps to remediate': 'remediation',
+        'CVE': 'cve',
+        'First discovered': 'first_discovered',
+        'Last Observed': 'last_observed',
+        'Plugin Output': 'plugin_output',
+        'Port': 'port',
+        'Exploit?': 'exploit_available',
+        'Key': 'unique_key',
+    }
+    
+    vulnerabilities_created = 0
+    hosts = set()
+    
+    for index, row in df.iterrows():
+        try:
+            # Extract data
+            data = {}
+            for col, field in column_mapping.items():
+                value = row.get(col, '')
+                
+                # Handle special conversions
+                if field == 'severity':
+                    value = str(value).lower()
+                elif field == 'exploit_available':
+                    value = str(value).lower() in ['yes', 'true', '1']
+                elif field in ['first_discovered', 'last_observed']:
+                    if pd.notna(value):
+                        try:
+                            value = pd.to_datetime(value).date()
+                        except:
+                            value = None
+                    else:
+                        value = None
+                elif field == 'port':
+                    try:
+                        value = int(value) if pd.notna(value) else None
+                    except:
+                        value = None
+                elif pd.isna(value):
+                    value = ''
+                
+                data[field] = value
+            
+            # Create or update vulnerability
+            vuln, created = Vulnerability.objects.update_or_create(
+                unique_key=data.get('unique_key', f"{data['ip_address']}-{data['plugin_id']}"),
+                defaults={
+                    'scan': scan,
+                    'plugin_id': data.get('plugin_id', ''),
+                    'plugin_name': data.get('plugin_name', ''),
+                    'ip_address': data.get('ip_address', '0.0.0.0'),
+                    'dns_name': data.get('dns_name', data.get('ip_address', 'Unknown')),
+                    'port': data.get('port'),
+                    'severity': data.get('severity', 'info'),
+                    'cve': data.get('cve', ''),
+                    'synopsis': data.get('synopsis', ''),
+                    'description': data.get('description', ''),
+                    'remediation': data.get('remediation', ''),
+                    'plugin_output': data.get('plugin_output', ''),
+                    'exploit_available': data.get('exploit_available', False),
+                    'first_discovered': data.get('first_discovered'),
+                    'last_observed': data.get('last_observed'),
+                }
+            )
+            
+            if created:
+                vulnerabilities_created += 1
+            
+            hosts.add(data.get('dns_name', data.get('ip_address', 'Unknown')))
+            
+        except Exception as e:
+            print(f"Error processing row {index}: {e}")
+            continue
+    
+    # Update scan statistics
+    scan.vulnerabilities_found = vulnerabilities_created
+    scan.hosts_scanned = len(hosts)
+    scan.processed = True
+    scan.save()
+
+
+@login_required
+def vulnerability_update_status(request, pk):
+    """Update vulnerability status"""
+    from .models import Vulnerability
+    
+    if request.method == 'POST':
+        vulnerability = get_object_or_404(Vulnerability, pk=pk)
+        new_status = request.POST.get('status')
+        
+        if new_status in dict(Vulnerability.STATUS_CHOICES):
+            vulnerability.status = new_status
+            vulnerability.save()
+            messages.success(request, 'Vulnerability status updated successfully.')
+        
+        return redirect('vulnerability_detail', pk=pk)
+    
+    return redirect('vulnerability_management')
+
+
+@login_required
+def vulnerability_add_note(request, pk):
+    """Add a note to a vulnerability"""
+    from .models import Vulnerability, VulnerabilityNote
+    
+    if request.method == 'POST':
+        vulnerability = get_object_or_404(Vulnerability, pk=pk)
+        note_text = request.POST.get('note')
+        
+        if note_text:
+            VulnerabilityNote.objects.create(
+                vulnerability=vulnerability,
+                user=request.user,
+                note=note_text
+            )
+            messages.success(request, 'Note added successfully.')
+        
+        return redirect('vulnerability_detail', pk=pk)
+    
+    return redirect('vulnerability_management')
+
+
+@login_required
+def vulnerability_scan_delete(request, pk):
+    """Delete a vulnerability scan"""
+    from .models import VulnerabilityScan
+    
+    if request.method == 'POST':
+        scan = get_object_or_404(VulnerabilityScan, pk=pk)
+        scan.file.delete()
+        scan.delete()
+        messages.success(request, 'Scan deleted successfully.')
+    
+    return redirect('vulnerability_management')
+
+
+@login_required
+def vulnerability_export(request):
+    """Export vulnerabilities to CSV"""
+    from .models import Vulnerability
+    
+    vulnerabilities = Vulnerability.objects.all()
+    
+    # Apply same filters as main view
+    severity_filter = request.GET.get('severity')
+    status_filter = request.GET.get('status')
+    
+    if severity_filter:
+        vulnerabilities = vulnerabilities.filter(severity=severity_filter)
+    if status_filter:
+        vulnerabilities = vulnerabilities.filter(status=status_filter)
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="vulnerabilities_export.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow([
+        'CVE', 'Plugin ID', 'Plugin Name', 'Severity', 'Status',
+        'DNS Name', 'IP Address', 'Port', 'Synopsis', 'Description',
+        'Remediation', 'First Discovered', 'Last Observed', 'Scan Name'
+    ])
+    
+    for vuln in vulnerabilities:
+        writer.writerow([
+            vuln.cve,
+            vuln.plugin_id,
+            vuln.plugin_name,
+            vuln.get_severity_display(),
+            vuln.get_status_display(),
+            vuln.dns_name,
+            vuln.ip_address,
+            vuln.port or '',
+            vuln.synopsis,
+            vuln.description,
+            vuln.remediation,
+            vuln.first_discovered or '',
+            vuln.last_observed or '',
+            vuln.scan.name,
+        ])
+    
+    return response

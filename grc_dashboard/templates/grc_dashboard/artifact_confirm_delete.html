@@ -1,35 +1,348 @@
-{% extends 'grc_dashboard/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Artifact - GRC Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block title %}Delete Artifact - ICARIS{% endblock %}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f8f9fa;
+            color: #1f2937;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
 
-{% block nav_artifacts %}active{% endblock %}
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
 
-{% block content %}
-<div class="page-header">
-    <div>
-        <h1>Delete Artifact</h1>
-        <p class="subtitle">Confirm deletion of this file.</p>
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            color: #5568d3;
+            transform: translateX(-3px);
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 2rem;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .warning-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .card-header h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .artifact-info {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .artifact-info h3 {
+            color: #1f2937;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .info-value {
+            color: #1f2937;
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .warning-box h4 {
+            color: #92400e;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .warning-box ul {
+            margin-left: 1.5rem;
+            color: #78350f;
+            font-size: 0.9rem;
+        }
+
+        .warning-box ul li {
+            margin-bottom: 0.25rem;
+        }
+
+        .confirmation-text {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .confirmation-text p {
+            color: #991b1b;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.875rem 1.75rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+            text-decoration: none;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            .card-header {
+                padding: 1.5rem;
+            }
+
+            .card-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .card-body {
+                padding: 1.5rem;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .info-row {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .info-value {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'artifacts' %}" class="back-link">
+            ← Back to Artifacts
+        </a>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="warning-icon">⚠️</div>
+                <h1>Delete Artifact</h1>
+                <p>This action cannot be undone</p>
+            </div>
+
+            <div class="card-body">
+                <!-- Artifact Information -->
+                <div class="artifact-info">
+                    <h3>📄 Artifact Details</h3>
+                    <div class="info-row">
+                        <span class="info-label">Title:</span>
+                        <span class="info-value">{{ artifact.title }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Category:</span>
+                        <span class="info-value">
+                            <span class="category-badge">
+                                {% if artifact.category == 'ato' %}✅ ATO
+                                {% elif artifact.category == 'certification' %}🏆 Certification
+                                {% elif artifact.category == 'diagram' %}📊 Diagram
+                                {% elif artifact.category == 'evidence' %}🔍 Evidence
+                                {% elif artifact.category == 'policy' %}📄 Policy
+                                {% elif artifact.category == 'procedure' %}📋 Procedure
+                                {% else %}📎 Other
+                                {% endif %}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Department:</span>
+                        <span class="info-value">{{ artifact.department.name }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Uploaded By:</span>
+                        <span class="info-value">{{ artifact.uploaded_by.username }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Upload Date:</span>
+                        <span class="info-value">{{ artifact.created_at|date:"F d, Y g:i A" }}</span>
+                    </div>
+                    {% if artifact.description %}
+                        <div class="info-row">
+                            <span class="info-label">Description:</span>
+                            <span class="info-value">{{ artifact.description|truncatewords:20 }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Warning Box -->
+                <div class="warning-box">
+                    <h4>⚠️ Warning</h4>
+                    <ul>
+                        <li><strong>The file will be permanently deleted</strong> from the server</li>
+                        <li>This artifact will be <strong>removed from all reports</strong></li>
+                        <li>Any references to this artifact will be lost</li>
+                        <li>This action <strong>cannot be reversed</strong></li>
+                    </ul>
+                </div>
+
+                <!-- Confirmation Text -->
+                <div class="confirmation-text">
+                    <p>🗑️ Are you sure you want to delete "{{ artifact.title }}"?</p>
+                </div>
+
+                <!-- Form -->
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-actions">
+                        <a href="{% url 'artifacts' %}" class="btn btn-secondary">
+                            ← Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            🗑️ Yes, Delete Permanently
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-</div>
-
-<div class="filter-card" style="max-width: 600px;">
-    <div style="text-align: center; padding: 20px;">
-        <i class="fas fa-exclamation-triangle" style="font-size: 64px; color: #ef4444; margin-bottom: 20px;"></i>
-        <h3 style="margin-bottom: 16px;">Are you sure?</h3>
-        <p style="color: #86868b; margin-bottom: 24px;">
-            Do you want to delete "<strong>{{ artifact.title }}</strong>"?<br>
-            This will permanently delete the file from the server.
-        </p>
-
-        <form method="post" style="display: inline-block;">
-            {% csrf_token %}
-            <button type="submit" class="btn-primary-custom" style="background: #ef4444;">
-                <i class="fas fa-trash"></i> Yes, Delete
-            </button>
-            <a href="{% url 'artifacts' %}" class="btn-clear" style="margin-left: 12px;">
-                <i class="fas fa-arrow-left"></i> Cancel
-            </a>
-        </form>
-    </div>
-</div>
-{% endblock %}
+</body>
+</html>

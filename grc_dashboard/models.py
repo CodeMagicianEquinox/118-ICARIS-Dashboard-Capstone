@@ -293,3 +293,112 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
+
+    # Add these models to grc_dashboard/models.py
+# Add at the end of your existing models.py file
+
+class VulnerabilityScan(models.Model):
+    """Uploaded vulnerability scan file"""
+    name = models.CharField(max_length=255)
+    file = models.FileField(upload_to='vulnerability_scans/%Y/%m/')
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='uploaded_scans')
+    upload_date = models.DateTimeField(auto_now_add=True)
+    vulnerabilities_found = models.IntegerField(default=0)
+    hosts_scanned = models.IntegerField(default=0)
+    processed = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.name} - {self.upload_date.strftime('%Y-%m-%d')}"
+    
+    class Meta:
+        ordering = ['-upload_date']
+
+
+class Vulnerability(models.Model):
+    """Individual vulnerability finding from scans"""
+    SEVERITY_CHOICES = [
+        ('critical', 'Critical'),
+        ('high', 'High'),
+        ('medium', 'Medium'),
+        ('low', 'Low'),
+        ('info', 'Info'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('in_progress', 'In Progress'),
+        ('resolved', 'Resolved'),
+        ('false_positive', 'False Positive'),
+    ]
+    
+    # Scan reference
+    scan = models.ForeignKey(VulnerabilityScan, on_delete=models.CASCADE, related_name='vulnerabilities')
+    
+    # Plugin information
+    plugin_id = models.CharField(max_length=50, verbose_name='Plugin ID')
+    plugin_name = models.CharField(max_length=255, verbose_name='Plugin Name')
+    
+    # Host information  
+    ip_address = models.GenericIPAddressField(verbose_name='IP Address')
+    dns_name = models.CharField(max_length=255, verbose_name='DNS Name', db_index=True)
+    port = models.IntegerField(null=True, blank=True)
+    
+    # Vulnerability details
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES, db_index=True)
+    cve = models.CharField(max_length=50, blank=True, verbose_name='CVE', db_index=True)
+    synopsis = models.TextField(verbose_name='Synopsis')
+    description = models.TextField(verbose_name='Description')
+    remediation = models.TextField(verbose_name='Steps to Remediate', blank=True)
+    plugin_output = models.TextField(verbose_name='Plugin Output', blank=True)
+    
+    # Exploit information
+    exploit_available = models.BooleanField(default=False, verbose_name='Exploit Available')
+    
+    # Tracking
+    first_discovered = models.DateField(null=True, blank=True)
+    last_observed = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open', db_index=True)
+    
+    # Unique key for deduplication
+    unique_key = models.CharField(max_length=255, unique=True, verbose_name='Unique Key')
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.cve or self.plugin_id} - {self.dns_name}"
+    
+    @property
+    def cvss_score(self):
+        """Estimated CVSS score based on severity"""
+        scores = {
+            'critical': 9.5,
+            'high': 7.5,
+            'medium': 5.5,
+            'low': 3.0,
+            'info': 0.0,
+        }
+        return scores.get(self.severity, 0.0)
+    
+    class Meta:
+        ordering = ['-severity', '-last_observed']
+        indexes = [
+            models.Index(fields=['dns_name', 'severity']),
+            models.Index(fields=['cve']),
+            models.Index(fields=['status']),
+        ]
+
+
+class VulnerabilityNote(models.Model):
+    """Notes and comments on vulnerabilities"""
+    vulnerability = models.ForeignKey(Vulnerability, on_delete=models.CASCADE, related_name='notes')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    note = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Note on {self.vulnerability} by {self.user}"
+    
+    class Meta:
+        ordering = ['-created_at']

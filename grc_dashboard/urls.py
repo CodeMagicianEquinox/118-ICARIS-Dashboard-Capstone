@@ -31,4 +31,16 @@ urlpatterns = [
     path('artifacts/', views.artifacts, name='artifacts'),
     path('artifacts/upload/', views.artifact_create, name='artifact_create'),
     path('artifacts/<int:pk>/delete/', views.artifact_delete, name='artifact_delete'),
+
+    # Add these URL patterns to grc_dashboard/urls.py
+# Add them to your existing urlpatterns list
+
+    # Vulnerability Management
+    path('vulnerabilities/', views.vulnerability_management, name='vulnerability_management'),
+    path('vulnerabilities/<int:pk>/', views.vulnerability_detail, name='vulnerability_detail'),
+    path('vulnerabilities/upload/', views.vulnerability_upload_scan, name='vulnerability_upload_scan'),
+    path('vulnerabilities/<int:pk>/update-status/', views.vulnerability_update_status, name='vulnerability_update_status'),
+    path('vulnerabilities/<int:pk>/add-note/', views.vulnerability_add_note, name='vulnerability_add_note'),
+    path('vulnerabilities/scans/<int:pk>/delete/', views.vulnerability_scan_delete, name='vulnerability_scan_delete'),
+    path('vulnerabilities/export/', views.vulnerability_export, name='vulnerability_export'),
 ]

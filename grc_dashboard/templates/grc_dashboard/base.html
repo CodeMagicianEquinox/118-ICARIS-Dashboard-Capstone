@@ -709,57 +709,53 @@
 </head>
 <body>
     <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">
-                <i class="fas fa-shield-alt"></i>
-            </div>
-            <h3>ICARIS</h3>
+<nav class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <i class="fas fa-shield-alt"></i>
         </div>
+        <h3>ICARIS</h3>
+    </div>
 
-        <ul class="sidebar-nav">
-            <li class="nav-item">
-                <a href="{% url 'dashboard' %}" class="nav-link {% block nav_dashboard %}{% endblock %}">
-                    <i class="fas fa-th-large"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'issue_tracking' %}" class="nav-link {% block nav_poams %}{% endblock %}">
-                    <i class="fas fa-tasks"></i>
-                    <span>PO&AMs</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'risk_register' %}" class="nav-link {% block nav_conmons %}{% endblock %}">
-                    <i class="fas fa-chart-line"></i>
-                    <span>ConMons</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'artifacts' %}" class="nav-link {% block nav_artifacts %}{% endblock %}">
-                    <i class="fas fa-folder"></i>
-                    <span>Artifacts</span>
-                </a>
-            </li>
-            <!-- ✅ USER GUIDE LINK ADDED HERE -->
-            <li class="nav-item">
-                <a href="{% url 'user_guide' %}" class="nav-link {% block nav_user_guide %}{% endblock %}">
-                    <i class="fas fa-book-open"></i>
-                    <span>User Guide</span>
-                </a>
-            </li>
-            <li class="nav-item" style="margin-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 20px;">
-                <form method="post" action="{% url 'logout' %}" style="margin: 0;">
-                    {% csrf_token %}
-                    <button type="submit" class="nav-link" style="width: 100%; text-align: left; background: none; border: none; cursor: pointer;">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </button>
-                </form>
-            </li>
-        </ul>
-    </nav>
+    <ul class="sidebar-nav">
+        <li class="nav-item">
+            <a href="{% url 'dashboard' %}" class="nav-link {% block nav_dashboard %}{% endblock %}">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'issue_tracking' %}" class="nav-link {% block nav_poams %}{% endblock %}">
+                <i class="fas fa-tasks"></i>
+                <span>PO&AMs</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'risk_register' %}" class="nav-link {% block nav_conmons %}{% endblock %}">
+                <i class="fas fa-chart-line"></i>
+                <span>ConMons</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'artifacts' %}" class="nav-link {% block nav_artifacts %}{% endblock %}">
+                <i class="fas fa-folder"></i>
+                <span>Artifacts</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'vulnerability_management' %}" class="nav-link {% block nav_vulnerabilities %}{% endblock %}">
+                <i class="fas fa-shield-alt"></i>
+                <span>Vulnerabilities</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'user_guide' %}" class="nav-link {% block nav_user_guide %}{% endblock %}">
+                <i class="fas fa-book-open"></i>
+                <span>User Guide</span>
+            </a>
+        </li>
+    </ul>
+</nav>
 
     <!-- Main Content -->
     <main class="main-content">
