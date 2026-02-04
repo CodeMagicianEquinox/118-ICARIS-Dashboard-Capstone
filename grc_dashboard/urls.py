@@ -32,3 +32,7 @@ urlpatterns = [
     path('artifacts/upload/', views.artifact_create, name='artifact_create'),
     path('artifacts/<int:pk>/delete/', views.artifact_delete, name='artifact_delete'),
 ]
+
+
+
+
