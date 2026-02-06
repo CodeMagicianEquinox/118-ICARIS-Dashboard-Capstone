@@ -1,6 +1,7 @@
 # grc_dashboard/views.py
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import logout
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Count, Q, Avg
 from django.utils import timezone
@@ -409,3 +410,25 @@ def user_guide(request):
         ]
     }
     return render(request, 'grc_dashboard/user_guide.html', context)
+
+
+# ============================================================
+# LOGOUT VIEW - Added for user logout functionality
+# ============================================================
+
+def user_logout(request):
+    """
+    Log out the current user and redirect to login page
+    """
+    # Get username before logging out for personalized message
+    username = request.user.username if request.user.is_authenticated else "User"
+    
+    # Logout the user (clears session)
+    logout(request)
+    
+    # Add success message
+    messages.success(request, f"Goodbye {username}! You have been successfully logged out.")
+    
+    # Redirect to login page
+    # ⚠️ IMPORTANT: Change 'login' to match your actual login URL name
+    return redirect('login')

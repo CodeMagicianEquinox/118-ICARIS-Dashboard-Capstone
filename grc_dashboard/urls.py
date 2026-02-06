@@ -11,6 +11,7 @@ urlpatterns = [
     path('risks/<int:pk>/edit/', views.risk_update, name='risk_update'),
     path('risks/<int:pk>/delete/', views.risk_delete, name='risk_delete'),
     path('api/risk-heatmap/', views.risk_heatmap_data, name='risk_heatmap_data'),
+    
 
     # User Guide
     path('user-guide/', views.user_guide, name='user_guide'),
@@ -31,6 +32,9 @@ urlpatterns = [
     path('artifacts/', views.artifacts, name='artifacts'),
     path('artifacts/upload/', views.artifact_create, name='artifact_create'),
     path('artifacts/<int:pk>/delete/', views.artifact_delete, name='artifact_delete'),
+
+    #Logout
+    path('logout/', views.user_logout, name='logout')
 ]
 
 

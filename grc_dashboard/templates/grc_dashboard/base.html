@@ -1,12 +1,25 @@
+{% load static %}
 <!-- templates/grc_dashboard/base.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ICARIS - Integrated Compliance & Risk Information System">
+    <meta name="author" content="Your Company Name">
+    
     <title>{% block title %}ICARIS{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+    
+    <!-- Font Awesome - Use CDN until you download local files -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js - Use CDN until you download local files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    
+    <!-- Custom Styles -->
     <style>
         * {
             margin: 0;
@@ -31,6 +44,8 @@
             padding: 0;
             z-index: 1000;
             overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
 
         .sidebar-header {
@@ -62,6 +77,7 @@
 
         .sidebar-nav {
             padding: 20px 0;
+            flex-grow: 1;
         }
 
         .nav-item {
@@ -95,6 +111,47 @@
             border-radius: 8px;
             margin: 0 12px;
             padding-left: 20px;
+        }
+
+        /* Logout Button - Special Styling */
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: auto;
+        }
+
+        .logout-form {
+            margin: 0;
+            padding: 0;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            font-family: inherit;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .logout-btn i {
+            font-size: 16px;
         }
 
         /* Main Content */
@@ -709,47 +766,58 @@
 </head>
 <body>
     <!-- Sidebar -->
-<nav class="sidebar">
-    <div class="sidebar-header">
-        <div class="logo">
-            <i class="fas fa-shield-alt"></i>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3>ICARIS</h3>
         </div>
-        <h3>ICARIS</h3>
-    </div>
 
-    <ul class="sidebar-nav">
-        <li class="nav-item">
-            <a href="{% url 'dashboard' %}" class="nav-link {% block nav_dashboard %}{% endblock %}">
-                <i class="fas fa-th-large"></i>
-                <span>Dashboard</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'issue_tracking' %}" class="nav-link {% block nav_poams %}{% endblock %}">
-                <i class="fas fa-tasks"></i>
-                <span>PO&AMs</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'risk_register' %}" class="nav-link {% block nav_conmons %}{% endblock %}">
-                <i class="fas fa-chart-line"></i>
-                <span>ConMons</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'artifacts' %}" class="nav-link {% block nav_artifacts %}{% endblock %}">
-                <i class="fas fa-folder"></i>
-                <span>Artifacts</span>
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'user_guide' %}" class="nav-link {% block nav_user_guide %}{% endblock %}">
-                <i class="fas fa-book-open"></i>
-                <span>User Guide</span>
-            </a>
-        </li>
-    </ul>
-</nav>
+        <ul class="sidebar-nav">
+            <li class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link {% block nav_dashboard %}{% endblock %}">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'issue_tracking' %}" class="nav-link {% block nav_poams %}{% endblock %}">
+                    <i class="fas fa-tasks"></i>
+                    <span>PO&AMs</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'risk_register' %}" class="nav-link {% block nav_conmons %}{% endblock %}">
+                    <i class="fas fa-chart-line"></i>
+                    <span>ConMons</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'artifacts' %}" class="nav-link {% block nav_artifacts %}{% endblock %}">
+                    <i class="fas fa-folder"></i>
+                    <span>Artifacts</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'user_guide' %}" class="nav-link {% block nav_user_guide %}{% endblock %}">
+                    <i class="fas fa-book-open"></i>
+                    <span>User Guide</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Logout Button in Footer - FIXED: Using POST Form -->
+        <div class="sidebar-footer">
+            <form method="post" action="{% url 'logout' %}" class="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+        </div>
+    </nav>
 
     <!-- Main Content -->
     <main class="main-content">
